@@ -152,16 +152,12 @@ class SolicitudDetailView(LoginRequiredMixin, DetailView):
         return Solicitud.objects.filter(empresa=self.request.user.empresa)
 
 class AlcanceCreateView(LoginRequiredMixin, CreateView):
-    model = Alcance
-    form_class = AlcanceForm
-    template_name = 'expedientes/alcance_form.html'
-
+    # ... (código existente)
     def dispatch(self, request, *args, **kwargs):
-        # Asegurarnos de que la solicitud pertenece al usuario
         self.solicitud = get_object_or_404(Solicitud, pk=self.kwargs['solicitud_pk'], empresa=request.user.empresa)
-        # Solo se puede añadir alcance si la solicitud está en Borrador
-        if self.solicitud.estado != 'Borrador':
-            messages.error(request, 'No se puede añadir un alcance a una solicitud que no está en estado Borrador.')
+        # Modificamos la condición
+        if self.solicitud.estado not in ['Borrador', 'En Subsanación']:
+            messages.error(request, 'No se puede modificar una solicitud que no está en estado Borrador o En Subsanación.')
             return redirect('solicitud_detalle', pk=self.solicitud.pk)
         return super().dispatch(request, *args, **kwargs)
 
@@ -210,11 +206,15 @@ class AlcanceDetailView(LoginRequiredMixin, DetailView):
         return Alcance.objects.filter(solicitud__empresa=self.request.user.empresa)
     
 class PersonaClaveCreateView(LoginRequiredMixin, CreateView):
+    from .models import PersonaClave
+    from .forms import PersonaClaveForm
+    
     model = PersonaClave
     form_class = PersonaClaveForm
-    template_name = 'expedientes/generic_form.html' # Usaremos una plantilla genérica
+    template_name = 'expedientes/generic_form.html'
 
     def dispatch(self, request, *args, **kwargs):
+        from .models import Alcance
         self.alcance = get_object_or_404(Alcance, pk=self.kwargs['alcance_pk'], solicitud__empresa=request.user.empresa)
         return super().dispatch(request, *args, **kwargs)
 
@@ -235,20 +235,22 @@ class PersonaClaveUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'expedientes/generic_form.html'
 
     def get_queryset(self):
-        return PersonaClave.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
+        return self.model.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
     
     def get_success_url(self):
         messages.success(self.request, 'Persona clave actualizada con éxito.')
         return reverse_lazy('alcance_detalle', kwargs={'pk': self.object.alcance.pk})
+
 
 class PersonaClaveDeleteView(LoginRequiredMixin, DeleteView):
     from .models import PersonaClave
     
     model = PersonaClave
     template_name = 'expedientes/generic_confirm_delete.html'
-    
+    context_object_name = 'object'
+
     def get_queryset(self):
-        return PersonaClave.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
+        return self.model.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
 
     def get_success_url(self):
         messages.success(self.request, 'Persona clave eliminada con éxito.')
@@ -256,11 +258,15 @@ class PersonaClaveDeleteView(LoginRequiredMixin, DeleteView):
 
 # --- Vistas para EquipoClave ---
 class EquipoClaveCreateView(LoginRequiredMixin, CreateView):
+    from .models import EquipoClave
+    from .forms import EquipoClaveForm
+
     model = EquipoClave
     form_class = EquipoClaveForm
     template_name = 'expedientes/generic_form.html'
 
     def dispatch(self, request, *args, **kwargs):
+        from .models import Alcance
         self.alcance = get_object_or_404(Alcance, pk=self.kwargs['alcance_pk'], solicitud__empresa=request.user.empresa)
         return super().dispatch(request, *args, **kwargs)
 
@@ -272,84 +278,111 @@ class EquipoClaveCreateView(LoginRequiredMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('alcance_detalle', kwargs={'pk': self.alcance.pk})
 
+class EquipoClaveUpdateView(LoginRequiredMixin, UpdateView):
+    from .models import EquipoClave
+    from .forms import EquipoClaveForm
+
+    model = EquipoClave
+    form_class = EquipoClaveForm
+    template_name = 'expedientes/generic_form.html'
+
+    def get_queryset(self):
+        return self.model.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
+    
+    def get_success_url(self):
+        messages.success(self.request, 'Equipo clave actualizado con éxito.')
+        return reverse_lazy('alcance_detalle', kwargs={'pk': self.object.alcance.pk})
+
 class EquipoClaveDeleteView(LoginRequiredMixin, DeleteView):
     from .models import EquipoClave
     
     model = EquipoClave
     template_name = 'expedientes/generic_confirm_delete.html'
+    context_object_name = 'object'
 
     def get_queryset(self):
-        return EquipoClave.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
+        return self.model.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
 
     def get_success_url(self):
         messages.success(self.request, 'Equipo clave eliminado con éxito.')
         return reverse_lazy('alcance_detalle', kwargs={'pk': self.object.alcance.pk})
 
+
 # --- Vistas para DocumentoProceso ---
 class DocumentoProcesoCreateView(LoginRequiredMixin, CreateView):
+    from .models import DocumentoProceso
+    from .forms import DocumentoProcesoForm
+
     model = DocumentoProceso
     form_class = DocumentoProcesoForm
     template_name = 'expedientes/generic_form.html'
 
     def dispatch(self, request, *args, **kwargs):
+        from .models import Alcance
         self.alcance = get_object_or_404(Alcance, pk=self.kwargs['alcance_pk'], solicitud__empresa=request.user.empresa)
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         form.instance.alcance = self.alcance
-        messages.success(self.request, 'Documento de proceso añadido con éxito.')
+        messages.success(self.request, 'Documento añadido con éxito.')
         return super().form_valid(form)
 
-        def get_success_url(self):
-            return reverse_lazy('alcance_detalle', kwargs={'pk': self.alcance.pk})
-        
+    def get_success_url(self):
+        return reverse_lazy('alcance_detalle', kwargs={'pk': self.alcance.pk})
+
+class DocumentoProcesoUpdateView(LoginRequiredMixin, UpdateView):
+    from .models import DocumentoProceso
+    from .forms import DocumentoProcesoForm
+
+    model = DocumentoProceso
+    form_class = DocumentoProcesoForm
+    template_name = 'expedientes/generic_form.html'
+
+    def get_queryset(self):
+        return self.model.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
     
-    class DocumentoProcesoUpdateView(LoginRequiredMixin, UpdateView):
-        model = DocumentoProceso
-        form_class = DocumentoProcesoForm
-        template_name = 'expedientes/generic_form.html'
-    
-        def get_queryset(self):
-            return DocumentoProceso.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
-        
-        def get_success_url(self):
-            messages.success(self.request, 'Documento actualizado con éxito.')
-            return reverse_lazy('alcance_detalle', kwargs={'pk': self.object.alcance.pk})
+    def get_success_url(self):
+        messages.success(self.request, 'Documento actualizado con éxito.')
+        return reverse_lazy('alcance_detalle', kwargs={'pk': self.object.alcance.pk})
 
 class DocumentoProcesoDeleteView(LoginRequiredMixin, DeleteView):
     from .models import DocumentoProceso
     
     model = DocumentoProceso
     template_name = 'expedientes/generic_confirm_delete.html'
+    context_object_name = 'object'
 
     def get_queryset(self):
-        return DocumentoProceso.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
+        return self.model.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
 
     def get_success_url(self):
         messages.success(self.request, 'Documento eliminado con éxito.')
         return reverse_lazy('alcance_detalle', kwargs={'pk': self.object.alcance.pk})
+    
 
 class EnviarSolicitudView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
-        # Obtener la solicitud asegurando que pertenece al usuario
         solicitud = get_object_or_404(Solicitud, pk=self.kwargs['pk'], empresa=request.user.empresa)
 
-        # Doble validación: solo se puede enviar si está en 'Borrador'
-        if solicitud.estado != 'Borrador':
-            messages.error(request, 'Esta solicitud ya ha sido enviada y no puede modificarse.')
+        # Modificamos la validación de estado
+        if solicitud.estado not in ['Borrador', 'En Subsanación']:
+            messages.error(request, 'Esta solicitud no se puede enviar.')
             return redirect('solicitud_detalle', pk=solicitud.pk)
 
-        # Validación de negocio: la solicitud debe tener al menos un alcance.
         if not solicitud.alcances.exists():
-            messages.error(request, 'No puede enviar una solicitud sin haber añadido al menos un ítem al alcance.')
+            messages.error(request, 'No puede enviar una solicitud sin al menos un ítem al alcance.')
             return redirect('solicitud_detalle', pk=solicitud.pk)
 
-        # ¡Acción principal! Cambiar el estado y guardar.
+        # ¡Paso clave! Limpiamos las revisiones anteriores antes de reenviar.
+        # Esto resetea el estado de revisión para que el personal pueda empezar de cero.
+        for alcance in solicitud.alcances.all():
+            alcance.revision_conforme = None
+            alcance.revision_observaciones = ""
+            alcance.save()
+
+        # Cambiamos el estado y guardamos
         solicitud.estado = 'En Revisión'
         solicitud.save()
 
-        # Registrar en auditoría (si el modelo Auditoria está listo)
-        # Auditoria.objects.create(usuario=request.user, accion=f"Envió a revisión la solicitud {solicitud.id}")
-
-        messages.success(request, '¡Solicitud enviada a revisión con éxito! El personal de AOXLAB la revisará pronto.')
+        messages.success(request, '¡Solicitud enviada a revisión con éxito!')
         return redirect('solicitud_detalle', pk=solicitud.pk)

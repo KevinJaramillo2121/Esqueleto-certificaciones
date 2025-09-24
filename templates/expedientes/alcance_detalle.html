@@ -10,7 +10,11 @@
 <section>
     <h3>Personas Clave</h3>
     {% for persona in alcance.personas_clave.all %}
-        <p>{{ persona.nombres }} - {{ persona.cargo }}</p>
+        <p>
+            {{ persona.nombres }} - {{ persona.cargo }}
+            <a href="{% url 'persona_editar' persona.pk %}">(Editar)</a>
+            <a href="{% url 'persona_eliminar' persona.pk %}" style="color:red;">(Eliminar)</a>
+        </p>
     {% empty %}
         <p>No hay personas clave registradas para este alcance.</p>
     {% endfor %}
@@ -22,7 +26,11 @@
 <section>
     <h3>Equipos Clave</h3>
     {% for equipo in alcance.equipos_clave.all %}
-        <p>{{ equipo.descripcion }}</p>
+        <p>
+            {{ equipo.descripcion }}
+            <a href="{% url 'equipo_editar' equipo.pk %}">(Editar)</a>
+            <a href="{% url 'equipo_eliminar' equipo.pk %}" style="color:red;">(Eliminar)</a>
+        </p>
     {% empty %}
         <p>No hay equipos clave registrados para este alcance.</p>
     {% endfor %}
@@ -34,7 +42,11 @@
 <section>
     <h3>Documentación del Proceso</h3>
     {% for documento in alcance.documentos_proceso.all %}
-        <p>{{ documento.nombre_archivo }}</p>
+        <p>
+            {{ documento.nombre_archivo }}
+            <a href="{% url 'documento_editar' documento.pk %}">(Editar)</a>
+            <a href="{% url 'documento_eliminar' documento.pk %}" style="color:red;">(Eliminar)</a>
+        </p>
     {% empty %}
         <p>No hay documentos registrados para este alcance.</p>
     {% endfor %}

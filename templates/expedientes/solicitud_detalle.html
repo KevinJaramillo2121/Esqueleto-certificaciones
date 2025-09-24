@@ -1,98 +1,102 @@
-<!-- templates/expedientes/solicitud_detalle.html -->
+<!-- templates/expedientes/solicitud_detalle.html (Versión con Feedback) -->
 
 <h1>Detalle de la Solicitud: {{ solicitud }}</h1>
 <a href="{% url 'dashboard' %}"><< Volver al Panel de Control</a>
 <hr>
 
-<!-- Sección 1: Resumen de la Solicitud -->
+<!-- Sección 1: Resumen y Alertas de Estado -->
 <section>
     <h2>Resumen</h2>
     <p><strong>Fecha de Creación:</strong> {{ solicitud.fecha_creacion|date:"d F, Y" }}</p>
     <p><strong>Estado Actual:</strong> <span style="font-weight: bold; color: #2980b9;">{{ solicitud.estado }}</span></p>
-    <p><strong>Esquema de Certificación:</strong> {{ solicitud.esquema_certificacion|default:"No especificado" }}</p>
-    
-    {% if solicitud.estado == 'Borrador' %}
-        <p style="background-color: #f1c40f; padding: 10px; border-radius: 5px;">
-            Esta solicitud está en modo <strong>Borrador</strong>. Puedes añadir o modificar el alcance de la certificación. Una vez que todo esté completo, podrás enviarla a revisión.
-        </p>
+
+    <!-- Alerta para estado 'En Subsanación' -->
+    {% if solicitud.estado == 'En Subsanación' %}
+        <div style="background-color: #e74c3c; color: white; padding: 15px; border-radius: 5px; margin: 15px 0;">
+            <strong>¡Atención!</strong> Tu solicitud ha sido devuelta con observaciones. Por favor, revisa los ítems marcados en rojo a continuación, realiza las correcciones necesarias y vuelve a enviar la solicitud para una nueva revisión.
+        </div>
     {% endif %}
 </section>
 
 <hr>
 
-<!-- Sección 2: Alcance de la Certificación -->
+<!-- Sección 2: Alcance de la Certificación (con Observaciones) -->
 <section>
     <h2>Alcance de la Certificación</h2>
-    <p>Aquí puedes definir los productos, procesos o servicios que deseas certificar.</p>
+    <p>Define los productos, procesos o servicios que deseas certificar.</p>
 
     {% if solicitud.alcances.all %}
-        <table border="1" style="width:100%; border-collapse: collapse;">
+        <table border="1" style="width:100%; border-collapse: collapse; margin-top: 10px;">
             <thead>
-                <tr>
+                <tr style="background-color: #f2f2f2;">
                     <th style="padding: 8px;">Tipo</th>
-                    <th style="padding: 8px;">Descripción</th>
-                    <th style="padding: 8px;">Acciones</th>
+                    <th style="padding: 8px;">Descripción y Observaciones</th>
+                    <th style="padding: 8px; width: 25%;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
             {% for alcance in solicitud.alcances.all %}
-                <tr>
-                    <td style="padding: 8px;">{{ alcance.tipo }}</td>
-                    <td style="padding: 8px;">{{ alcance.descripcion }}</td>
+                <!-- Resaltamos la fila si el ítem fue marcado como 'No Conforme' -->
+                <tr {% if alcance.revision_conforme == False %}style="background-color: #ffe6e6;"{% endif %}>
+                    <td style="padding: 8px; vertical-align: top;">{{ alcance.tipo }}</td>
                     <td style="padding: 8px;">
-                        <!-- Estos enlaces no funcionarán todavía -->
-                        <td style="padding: 8px;">
-                            <a href="{% url 'alcance_detalle' alcance.pk %}">Ver / Gestionar Recursos</a> |
-                            <a href="{% url 'alcance_editar' alcance.pk %}">Editar</a> |
-                            <a href="{% url 'alcance_eliminar' alcance.pk %}" onclick="return confirm('¿Estás seguro de que quieres eliminar este ítem?');" style="color:red;">Eliminar</a>
-                        </td>
+                        {{ alcance.descripcion }}
+                        <!-- Mostramos la observación del revisor si existe -->
+                        {% if alcance.revision_conforme == False and alcance.revision_observaciones %}
+                            <p style="color: #c0392b; border-left: 3px solid #c0392b; padding-left: 10px; margin-top: 10px;">
+                                <strong>Observación del Revisor:</strong> {{ alcance.revision_observaciones }}
+                            </p>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 8px; vertical-align: top;">
+                        <a href="{% url 'alcance_detalle' alcance.pk %}">Ver / Gestionar Recursos</a>
+                        <!-- Solo se puede editar si la solicitud está en Borrador o en Subsanación -->
+                        {% if solicitud.estado == 'Borrador' or solicitud.estado == 'En Subsanación' %}
+                            | <a href="{% url 'alcance_editar' alcance.pk %}">Editar</a>
+                            | <a href="{% url 'alcance_eliminar' alcance.pk %}" onclick="return confirm('¿Estás seguro?');" style="color:red;">Eliminar</a>
+                        {% endif %}
                     </td>
                 </tr>
             {% endfor %}
-
-            <a href="{% url 'alcance_editar' alcance.pk %}">Editar</a> | 
-            <a href="{% url 'alcance_eliminar' alcance.pk %}" onclick="return confirm('¿Estás seguro de que quieres eliminar este ítem?');" style="color:red;">Eliminar</a>
-
             </tbody>
         </table>
-        <a href="{% url 'alcance_crear' solicitud.pk %}">Añadir Ítem al Alcance</a>
-
     {% else %}
         <p>Aún no has añadido ningún ítem al alcance de esta solicitud.</p>
     {% endif %}
     
     <br>
     
-    {% if solicitud.estado == 'Borrador' %}
-        <!-- Este enlace tampoco funcionará todavía -->
-        <a href="#">Añadir Ítem al Alcance</a>
+    <!-- El botón para añadir solo aparece en los estados editables -->
+    {% if solicitud.estado == 'Borrador' or solicitud.estado == 'En Subsanación' %}
+        <a href="{% url 'alcance_crear' solicitud.pk %}">Añadir Ítem al Alcance</a>
     {% endif %}
 </section>
 
 <hr>
 
-<!-- Sección 3: Envío de la Solicitud -->
+<!-- Sección 3: Envío de la Solicitud (con lógica para reenviar) -->
 <section>
     <h2>Enviar a Revisión</h2>
-    {% if solicitud.estado == 'Borrador' %}
+    {% if solicitud.estado == 'Borrador' or solicitud.estado == 'En Subsanación' %}
         <p>
-            Una vez que hayas completado toda la información y añadido todos los ítems al alcance,
-            puedes enviar la solicitud para que sea revisada por el personal de AOXLAB.
-            <strong>Esta acción no se puede deshacer.</strong>
+            Una vez que hayas completado toda la información y corregido las observaciones, puedes enviar la solicitud para que sea revisada por el personal de AOXLAB.
         </p>
-        <!-- El botón de envío solo se muestra si hay al menos un alcance -->
         {% if solicitud.alcances.all %}
             <form method="post" action="{% url 'solicitud_enviar' solicitud.pk %}">
                 {% csrf_token %}
-                <button type="submit" onclick="return confirm('¿Estás seguro de que quieres enviar la solicitud a revisión? No podrás editarla después.');">
-                    Enviar Solicitud a Revisión
+                <button type="submit" onclick="return confirm('¿Estás seguro de que quieres enviar la solicitud a revisión?');">
+                    {% if solicitud.estado == 'En Subsanación' %}
+                        Reenviar Solicitud Corregida
+                    {% else %}
+                        Enviar Solicitud a Revisión
+                    {% endif %}
                 </button>
             </form>
         {% else %}
             <p style="color: #c0392b;">Debe añadir al menos un ítem al alcance para poder enviar la solicitud.</p>
         {% endif %}
     {% else %}
-        <p>Esta solicitud ya no está en modo Borrador y no puede ser modificada.</p>
+        <p>Esta solicitud ya no está en un estado editable y está siendo procesada por el personal de AOXLAB.</p>
     {% endif %}
 </section>
 
