@@ -1,0 +1,13 @@
+<!-- templates/expedientes/sede_form.html -->
+{% if object %}
+    <h1>Editar Sede</h1>
+{% else %}
+    <h1>Añadir Nueva Sede</h1>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Guardar</button>
+</form>
+<a href="{% url 'dashboard' %}">Cancelar</a>

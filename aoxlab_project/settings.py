@@ -141,3 +141,7 @@ LOGOUT_REDIRECT_URL = 'home'
 
 # Configuración del backend de email para desarrollo
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Configuración para manejar archivos subidos (representante legal)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

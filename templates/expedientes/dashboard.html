@@ -1,24 +1,73 @@
-<!-- templates/expedientes/dashboard.html -->
-<h1>Panel de Control de Cliente</h1>
-<p>Bienvenido, {{ user.nombre }}.</p>
+<!-- templates/expedientes/dashboard.html (Versión Optimizada) -->
 
+<h1>Panel de Control del Cliente</h1>
+<p>Bienvenido, {{ user.nombre }}.</p>
 <hr>
 
-<h2>Información de tu Empresa</h2>
-
 {% if empresa %}
-    <p><strong>Razón Social:</strong> {{ empresa.razon_social }}</p>
-    <p><strong>NIT:</strong> {{ empresa.nit }}</p>
-    <p>Ya tienes registrada la información de tu empresa. Desde aquí podrás gestionarla y crear nuevas solicitudes de certificación.</p>
-    <!-- Más adelante aquí pondremos un botón para editar -->
+    <!-- ================================================================== -->
+    <!-- ESTA SECCIÓN SE MUESTRA SI EL USUARIO YA TIENE UNA EMPRESA REGISTRADA -->
+    <!-- ================================================================== -->
+
+    <!-- Sección de Información General de la Empresa -->
+    <section>
+        <h2>Información de tu Empresa</h2>
+        <p><strong>Razón Social:</strong> {{ empresa.razon_social }}</p>
+        <p><strong>NIT:</strong> {{ empresa.nit }}</p>
+        <a href="{% url 'empresa_editar' %}">Editar Información de la Empresa</a>
+    </section>
+
+    <hr>
+
+    <!-- Sección de Sedes -->
+    <section>
+        <h2>Sedes</h2>
+        {% if empresa.sedes.all %}
+            <ul>
+                {% for sede in empresa.sedes.all %}
+                    <li>
+                        {{ sede.direccion }}, {{ sede.municipio }}
+                        <a href="{% url 'sede_editar' sede.pk %}">Editar</a> |
+                        <a href="{% url 'sede_eliminar' sede.pk %}" onclick="return confirm('¿Estás seguro de que quieres eliminar esta sede?');" style="color:red;">Eliminar</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No tienes sedes registradas.</p>
+        {% endif %}
+        <a href="{% url 'sede_crear' %}">Añadir Nueva Sede</a>
+    </section>
+
+    <hr>
+
+    <!-- Sección de Representante Legal -->
+    <section>
+        <h2>Representante Legal</h2>
+        {% if empresa.representantelegal %}
+            <p><strong>Nombre:</strong> {{ empresa.representantelegal.nombres }} {{ empresa.representantelegal.apellidos }}</p>
+            <p><strong>Documento:</strong> {{ empresa.representantelegal.tipo_documento }} {{ empresa.representantelegal.numero_documento }}</p>
+            <a href="{% url 'representante_editar' %}">Editar Representante Legal</a>
+        {% else %}
+            <p>Aún no has registrado un Representante Legal.</p>
+            <a href="{% url 'representante_crear' %}">Añadir Representante Legal</a>
+        {% endif %}
+    </section>
+
 {% else %}
-    <p>Aún no has registrado la información de tu empresa. Este es el primer paso para poder crear una solicitud de certificación.</p>
-    <a href="{% url 'empresa_crear' %}">Registrar mi Empresa</a>
+    <!-- ================================================================ -->
+    <!-- ESTA SECCIÓN SE MUESTRA SI EL USUARIO AÚN NO TIENE UNA EMPRESA -->
+    <!-- ================================================================ -->
+
+    <section>
+        <h2>¡Bienvenido a AOXLAB!</h2>
+        <p>El primer paso para poder crear una solicitud de certificación es registrar la información de tu empresa.</p>
+        <a href="{% url 'empresa_crear' %}">Registrar mi Empresa</a>
+    </section>
+
 {% endif %}
 
 <hr>
-
-<form action="{% url 'logout' %}" method="post">
+<form action="{% url 'logout' %}" method="post" style="margin-top: 20px;">
     {% csrf_token %}
     <button type="submit">Cerrar Sesión</button>
 </form>

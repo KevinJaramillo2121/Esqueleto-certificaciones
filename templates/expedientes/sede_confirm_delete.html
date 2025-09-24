@@ -1,0 +1,9 @@
+<!-- templates/expedientes/sede_confirm_delete.html -->
+<h1>Confirmar Eliminación</h1>
+<p>¿Estás seguro de que quieres eliminar la sede en "{{ object.direccion }}"?</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" style="color:red;">Sí, eliminar</button>
+    <a href="{% url 'dashboard' %}">Cancelar</a>
+</form>

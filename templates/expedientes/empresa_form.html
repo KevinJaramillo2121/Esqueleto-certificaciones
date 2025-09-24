@@ -1,9 +1,13 @@
 <!-- templates/expedientes/empresa_form.html -->
-<h1>Registrar Información de la Empresa</h1>
+{% if object %}
+    <h1>Editar Información de la Empresa</h1>
+{% else %}
+    <h1>Registrar Información de la Empresa</h1>
+{% endif %}
 <p>Completa el siguiente formulario con los datos de tu empresa.</p>
 
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Guardar Empresa</button>
+    <button type="submit">Guardar Cambios</button>
 </form>
