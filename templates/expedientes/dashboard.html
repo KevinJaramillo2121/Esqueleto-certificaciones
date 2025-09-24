@@ -1,0 +1,24 @@
+<!-- templates/expedientes/dashboard.html -->
+<h1>Panel de Control de Cliente</h1>
+<p>Bienvenido, {{ user.nombre }}.</p>
+
+<hr>
+
+<h2>Información de tu Empresa</h2>
+
+{% if empresa %}
+    <p><strong>Razón Social:</strong> {{ empresa.razon_social }}</p>
+    <p><strong>NIT:</strong> {{ empresa.nit }}</p>
+    <p>Ya tienes registrada la información de tu empresa. Desde aquí podrás gestionarla y crear nuevas solicitudes de certificación.</p>
+    <!-- Más adelante aquí pondremos un botón para editar -->
+{% else %}
+    <p>Aún no has registrado la información de tu empresa. Este es el primer paso para poder crear una solicitud de certificación.</p>
+    <a href="{% url 'empresa_crear' %}">Registrar mi Empresa</a>
+{% endif %}
+
+<hr>
+
+<form action="{% url 'logout' %}" method="post">
+    {% csrf_token %}
+    <button type="submit">Cerrar Sesión</button>
+</form>

@@ -1,0 +1,9 @@
+<!-- templates/expedientes/empresa_form.html -->
+<h1>Registrar Información de la Empresa</h1>
+<p>Completa el siguiente formulario con los datos de tu empresa.</p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Guardar Empresa</button>
+</form>

@@ -24,4 +24,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('users.urls')), # URLs de tu app de usuarios
     path('accounts/', include('django.contrib.auth.urls')), # URLs de auth de Django (login, logout, etc.)
+
+    
+    # Incluimos las URLs de la app expedientes
+    path('', include('expedientes.urls')), 
+    
+    # Mantenemos la página de inicio para visitantes
+    path('', TemplateView.as_view(template_name='home.html'), name='home'),
 ]

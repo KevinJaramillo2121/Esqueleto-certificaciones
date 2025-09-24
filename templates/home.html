@@ -1,7 +1,24 @@
 <!-- templates/home.html -->
-<h1>Bienvenido, {{ user.nombre }}!</h1>
-<p>Has iniciado sesión correctamente.</p>
-<form action="{% url 'logout' %}" method="post">
+<!-- Asumiendo que tendrás una plantilla base más adelante -->
+
+{% block content %}
+    {% if user.is_authenticated %}
+    {# Contenido para usuarios que SÍ han iniciado sesión #}
+    <h1>¡Bienvenido, {{ user.nombre }}!</h1>
+    <p>Has iniciado sesión correctamente en el aplicativo de AOXLAB.</p>
+    <p>Desde aquí podrás gestionar tus expedientes de certificación.</p>
+    
+    <form action="{% url 'logout' %}" method="post">
     {% csrf_token %}
     <button type="submit">Cerrar Sesión</button>
-</form>
+    </form>
+
+    {% else %}
+    {# Contenido para usuarios que NO han iniciado sesión #}
+    <h1>Bienvenido al Aplicativo de Gestión de Expedientes</h1>
+    <p>Por favor, inicia sesión para continuar o regístrate si eres un nuevo cliente.</p>
+    <a href="{% url 'login' %}">Iniciar Sesión</a>
+    <br>
+    <a href="{% url 'signup' %}">Registrarse</a>
+    {% endif %}
+{% endblock %}
