@@ -71,3 +71,39 @@
     {% csrf_token %}
     <button type="submit">Cerrar Sesión</button>
 </form>
+
+<hr>
+<!-- Nueva Sección de Solicitudes -->
+<section>
+    <h2>Mis Solicitudes de Certificación</h2>
+    {% if solicitudes %}
+        <table border="1" style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="padding: 8px;">ID Solicitud</th>
+                    <th style="padding: 8px;">Fecha de Creación</th>
+                    <th style="padding: 8px;">Estado</th>
+                    <th style="padding: 8px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for solicitud in solicitudes %}
+                    <tr>
+                        <td style="padding: 8px;">{{ solicitud }}</td>
+                        <td style="padding: 8px;">{{ solicitud.fecha_creacion|date:"d/m/Y" }}</td>
+                        <td style="padding: 8px;">{{ solicitud.estado }}</td>
+                        <td style="padding: 8px;">
+                            <!-- Este enlace no funcionará aún, lo crearemos en el siguiente paso -->
+                            <a href="#">Ver/Editar</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Aún no has creado ninguna solicitud.</p>
+    {% endif %}
+    <br>
+    <!-- Este botón no funcionará aún, lo conectaremos en el siguiente paso -->
+    <a href="#">Crear Nueva Solicitud</a>
+</section>

@@ -12,14 +12,18 @@ from django.views.generic import CreateView, UpdateView, DeleteView
 # Si un usuario no autenticado intenta acceder, será redirigido al login.
 class DashboardView(LoginRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        # Buscamos si el usuario ya tiene una empresa creada.
+        empresa = None
+        solicitudes = None # Inicializamos la variable
         try:
             empresa = request.user.empresa
+            # Si la empresa existe, obtenemos sus solicitudes
+            solicitudes = empresa.solicitudes.all().order_by('-fecha_creacion')
         except Empresa.DoesNotExist:
-            empresa = None
+            pass # No hace nada si la empresa no existe
         
         context = {
-            'empresa': empresa
+            'empresa': empresa,
+            'solicitudes': solicitudes, # Pasamos las solicitudes a la plantilla
         }
         return render(request, 'expedientes/dashboard.html', context)
 

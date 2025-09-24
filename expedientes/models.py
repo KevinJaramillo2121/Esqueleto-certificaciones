@@ -1,6 +1,7 @@
 
 from django.db import models
 from django.conf import settings # Para referenciar al modelo de Usuario
+from django.utils import timezone
 
 # Modelo Empresa
 # Almacena la información principal de la compañía del cliente.
@@ -54,3 +55,55 @@ class RepresentanteLegal(models.Model):
 
     def __str__(self):
         return f"{self.nombres} {self.apellidos}"
+
+
+# --- Nuevos Modelos para la Fase 3 ---
+
+class Solicitud(models.Model):
+    # Opciones para el campo 'estado', basadas en el flujo del documento de requisitos.
+    ESTADO_CHOICES = [
+        ('Borrador', 'Borrador'),
+        ('En Revisión', 'En Revisión'),
+        ('En Subsanación', 'En Subsanación'),
+        ('En Planificación', 'En Planificación'),
+        ('En Ejecución', 'En Ejecución'),
+        ('Revisión de Evidencias', 'Revisión de Evidencias'),
+        ('Aprobado', 'Aprobado'),
+        ('Rechazado', 'Rechazado'),
+    ]
+
+    # Relaciones
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='solicitudes')
+    usuario_solicitante = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+
+    # Campos de la solicitud
+    fecha_creacion = models.DateTimeField(default=timezone.now)
+    estado = models.CharField(max_length=30, choices=ESTADO_CHOICES, default='Borrador')
+    observaciones = models.TextField(blank=True, null=True)
+    esquema_certificacion = models.CharField(max_length=100, blank=True)
+    sistema_gestion = models.TextField(blank=True, null=True, help_text="Aplicable para certificaciones bajo el esquema 6 de la norma ISO/IEC 17067:2013")
+
+    def __str__(self):
+        # Generamos un ID legible para la solicitud
+        return f"SOL-{self.id:04d} - {self.empresa.razon_social}"
+
+class Alcance(models.Model):
+    TIPO_ALCANCE_CHOICES = [
+        ('Producto', 'Producto'),
+        ('Proceso', 'Proceso'),
+        ('Servicio', 'Servicio'),
+    ]
+
+    # Relación: Un alcance pertenece a una única solicitud
+    solicitud = models.ForeignKey(Solicitud, on_delete=models.CASCADE, related_name='alcances')
+    
+    # Campos del alcance
+    tipo = models.CharField(max_length=30, choices=TIPO_ALCANCE_CHOICES)
+    descripcion = models.TextField()
+    referencia_normativa = models.TextField(blank=True)
+    
+    # Este campo se puede heredar de la solicitud o ser específico del alcance
+    esquema_certificacion = models.CharField(max_length=100, blank=True)
+
+    def __str__(self):
+        return f"Alcance {self.tipo}: {self.descripcion[:50]}..."
