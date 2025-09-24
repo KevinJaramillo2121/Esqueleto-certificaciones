@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # Mis Apps
     'users',
     'expedientes',
+    'staff_panel',
 ]
 
 MIDDLEWARE = [

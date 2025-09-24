@@ -1,13 +1,11 @@
+# expedientes/models.py
 
 from django.db import models
-from django.conf import settings # Para referenciar al modelo de Usuario
+from django.conf import settings
 from django.utils import timezone
 
 # Modelo Empresa
-# Almacena la información principal de la compañía del cliente.
 class Empresa(models.Model):
-    # Usamos OneToOneField porque un usuario solo puede gestionar una empresa.
-    # Si el usuario se elimina, la empresa asociada también se eliminará (CASCADE).
     usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     nit = models.CharField(max_length=20, unique=True)
     razon_social = models.CharField(max_length=255)
@@ -22,9 +20,7 @@ class Empresa(models.Model):
         return self.razon_social
 
 # Modelo Sede
-# Una empresa puede tener múltiples sedes.
 class Sede(models.Model):
-    # Relación ForeignKey: muchas sedes pueden pertenecer a una empresa.
     empresa = models.ForeignKey(Empresa, related_name='sedes', on_delete=models.CASCADE)
     direccion = models.TextField()
     pais = models.CharField(max_length=100)
@@ -35,9 +31,7 @@ class Sede(models.Model):
         return f"Sede de {self.empresa.razon_social} en {self.municipio}"
 
 # Modelo RepresentanteLegal
-# Cada empresa tiene un único representante legal.
 class RepresentanteLegal(models.Model):
-    # OneToOneField asegura que una empresa solo tenga un representante.
     empresa = models.OneToOneField(Empresa, on_delete=models.CASCADE)
     tipo_documento = models.CharField(max_length=30)
     numero_documento = models.CharField(max_length=30)
@@ -45,22 +39,13 @@ class RepresentanteLegal(models.Model):
     apellidos = models.CharField(max_length=100)
     correo_personal = models.EmailField(max_length=150)
     telefono_movil = models.CharField(max_length=30)
-
-    # NOTA IMPORTANTE sobre los archivos (BYTEA vs FileField):
-    # En Django, la mejor práctica no es guardar archivos en la base de datos (BYTEA)
-    # porque es ineficiente. En su lugar, se usa un FileField que guarda el archivo
-    # en el servidor y solo almacena la ruta en la base de datos.
-    # Para usar FileField, necesitarás configurar MEDIA_ROOT y MEDIA_URL en settings.py
     documento_pdf = models.FileField(upload_to='representantes/documentos/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.nombres} {self.apellidos}"
 
-
-# --- Nuevos Modelos para la Fase 3 ---
-
+# Modelo Solicitud
 class Solicitud(models.Model):
-    # Opciones para el campo 'estado', basadas en el flujo del documento de requisitos.
     ESTADO_CHOICES = [
         ('Borrador', 'Borrador'),
         ('En Revisión', 'En Revisión'),
@@ -71,12 +56,8 @@ class Solicitud(models.Model):
         ('Aprobado', 'Aprobado'),
         ('Rechazado', 'Rechazado'),
     ]
-
-    # Relaciones
     empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='solicitudes')
     usuario_solicitante = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
-
-    # Campos de la solicitud
     fecha_creacion = models.DateTimeField(default=timezone.now)
     estado = models.CharField(max_length=30, choices=ESTADO_CHOICES, default='Borrador')
     observaciones = models.TextField(blank=True, null=True)
@@ -84,39 +65,37 @@ class Solicitud(models.Model):
     sistema_gestion = models.TextField(blank=True, null=True, help_text="Aplicable para certificaciones bajo el esquema 6 de la norma ISO/IEC 17067:2013")
 
     def __str__(self):
-        # Generamos un ID legible para la solicitud
         return f"SOL-{self.id:04d} - {self.empresa.razon_social}"
 
+# Modelo Alcance
 class Alcance(models.Model):
     TIPO_ALCANCE_CHOICES = [
         ('Producto', 'Producto'),
         ('Proceso', 'Proceso'),
         ('Servicio', 'Servicio'),
     ]
-
-    # Relación: Un alcance pertenece a una única solicitud
     solicitud = models.ForeignKey(Solicitud, on_delete=models.CASCADE, related_name='alcances')
-    
-    # Campos del alcance
     tipo = models.CharField(max_length=30, choices=TIPO_ALCANCE_CHOICES)
     descripcion = models.TextField()
     referencia_normativa = models.TextField(blank=True)
-    
-    # Este campo se puede heredar de la solicitud o ser específico del alcance
     esquema_certificacion = models.CharField(max_length=100, blank=True)
+    revision_conforme = models.BooleanField(null=True, default=None, blank=True)
+    revision_observaciones = models.TextField(blank=True)
 
     def __str__(self):
-            return f"Alcance {self.tipo}: {self.descripcion[:50]}..."
-    
-    class PersonaClave(models.Model):
-        alcance = models.ForeignKey('Alcance', on_delete=models.CASCADE, related_name='personas_clave')
-        nombres = models.CharField(max_length=100)
-        cargo = models.CharField(max_length=100)
-        formacion = models.CharField(max_length=100, blank=True)
-        experiencia = models.TextField(blank=True)
-    
-        def __str__(self):
-            return f"{self.nombres} - {self.cargo}"
+        return f"Alcance {self.tipo}: {self.descripcion[:50]}..."
+
+# --- MODELOS DE RECURSOS (AHORA AL NIVEL CORRECTO) ---
+
+class PersonaClave(models.Model):
+    alcance = models.ForeignKey(Alcance, on_delete=models.CASCADE, related_name='personas_clave')
+    nombres = models.CharField(max_length=100)
+    cargo = models.CharField(max_length=100)
+    formacion = models.CharField(max_length=100, blank=True)
+    experiencia = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.nombres} - {self.cargo}"
 
 class EquipoClave(models.Model):
     alcance = models.ForeignKey(Alcance, on_delete=models.CASCADE, related_name='equipos_clave')

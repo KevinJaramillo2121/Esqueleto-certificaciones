@@ -1,0 +1,41 @@
+<!-- templates/staff_panel/staff_dashboard.html -->
+<h1>Panel de Control - Personal de AOXLAB</h1>
+<p>Bienvenido, {{ user.nombre }}.</p>
+<hr>
+
+<section>
+    <h2>Solicitudes Pendientes de Revisión</h2>
+    {% if solicitudes_por_revisar %}
+        <table border="1" style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="padding: 8px;">ID Solicitud</th>
+                    <th style="padding: 8px;">Empresa</th>
+                    <th style="padding: 8px;">Fecha de Envío</th>
+                    <th style="padding: 8px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for solicitud in solicitudes_por_revisar %}
+                <tr>
+                    <td style="padding: 8px;">{{ solicitud }}</td>
+                    <td style="padding: 8px;">{{ solicitud.empresa.razon_social }}</td>
+                    <td style="padding: 8px;">{{ solicitud.fecha_creacion|date:"d/m/Y" }}</td>
+                    <td style="padding: 8px;">
+                        <!-- Este enlace no funcionará aún -->
+                        <a href="{% url 'solicitud_revisar' solicitud.pk %}">Revisar Solicitud</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay solicitudes pendientes de revisión en este momento.</p>
+    {% endif %}
+</section>
+
+<hr>
+<form action="{% url 'logout' %}" method="post" style="margin-top: 20px;">
+    {% csrf_token %}
+    <button type="submit">Cerrar Sesión</button>
+</form>

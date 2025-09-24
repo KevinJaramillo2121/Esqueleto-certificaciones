@@ -1,0 +1,48 @@
+<!-- templates/staff_panel/solicitud_revision_form.html -->
+<h1>Revisión de Solicitud: {{ solicitud }}</h1>
+<a href="{% url 'staff_dashboard' %}"><< Volver al Panel de Staff</a>
+<hr>
+
+<h3>Datos del Cliente y Empresa</h3>
+<p><strong>Empresa:</strong> {{ solicitud.empresa.razon_social }} (NIT: {{ solicitud.empresa.nit }})</p>
+<p><strong>Representante Legal:</strong> {{ solicitud.empresa.representantelegal.nombres }} {{ solicitud.empresa.representantelegal.apellidos }}</p>
+<!-- Aquí puedes añadir más detalles de la empresa, sedes, etc. -->
+
+<hr>
+<h3>Revisión del Alcance</h3>
+<p>Revisa cada ítem del alcance y marca su estado como "Conforme" o "No Conforme". Si un ítem no es conforme, es obligatorio añadir una observación.</p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <table border="1" style="width:100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th style="padding: 8px; width: 40%;">Descripción del Alcance</th>
+                <th style="padding: 8px; width: 20%;">Estado</th>
+                <th style="padding: 8px; width: 40%;">Observaciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for form in formset %}
+            <tr>
+                <td style="padding: 8px;">
+                    <strong>{{ form.instance.tipo }}:</strong> {{ form.instance.descripcion }}
+                    <br>
+                    <em><strong>Recursos:</strong>
+                    Personas: {{ form.instance.personas_clave.count }},
+                    Equipos: {{ form.instance.equipos_clave.count }},
+                    Docs: {{ form.instance.documentos_proceso.count }}
+                    </em>
+                    <!-- Aquí podrías añadir enlaces para ver los recursos en detalle -->
+                </td>
+                <td style="padding: 8px;">{{ form.revision_conforme }}</td>
+                <td style="padding: 8px;">{{ form.revision_observaciones }}</td>
+                {{ form.id }} {# Campo oculto necesario para el formset #}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <button type="submit">Guardar Revisión y Notificar</button>
+</form>

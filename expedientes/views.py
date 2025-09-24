@@ -226,6 +226,33 @@ class PersonaClaveCreateView(LoginRequiredMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('alcance_detalle', kwargs={'pk': self.alcance.pk})
 
+class PersonaClaveUpdateView(LoginRequiredMixin, UpdateView):
+    from .models import PersonaClave
+    from .forms import PersonaClaveForm
+
+    model = PersonaClave
+    form_class = PersonaClaveForm
+    template_name = 'expedientes/generic_form.html'
+
+    def get_queryset(self):
+        return PersonaClave.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
+    
+    def get_success_url(self):
+        messages.success(self.request, 'Persona clave actualizada con éxito.')
+        return reverse_lazy('alcance_detalle', kwargs={'pk': self.object.alcance.pk})
+
+class PersonaClaveDeleteView(LoginRequiredMixin, DeleteView):
+    from .models import PersonaClave
+    
+    model = PersonaClave
+    template_name = 'expedientes/generic_confirm_delete.html'
+    
+    def get_queryset(self):
+        return PersonaClave.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
+
+    def get_success_url(self):
+        messages.success(self.request, 'Persona clave eliminada con éxito.')
+        return reverse_lazy('alcance_detalle', kwargs={'pk': self.object.alcance.pk})
 
 # --- Vistas para EquipoClave ---
 class EquipoClaveCreateView(LoginRequiredMixin, CreateView):
@@ -245,7 +272,18 @@ class EquipoClaveCreateView(LoginRequiredMixin, CreateView):
     def get_success_url(self):
         return reverse_lazy('alcance_detalle', kwargs={'pk': self.alcance.pk})
 
-# Aquí irían las vistas EquipoClaveUpdateView y EquipoClaveDeleteView, que siguen el mismo patrón.
+class EquipoClaveDeleteView(LoginRequiredMixin, DeleteView):
+    from .models import EquipoClave
+    
+    model = EquipoClave
+    template_name = 'expedientes/generic_confirm_delete.html'
+
+    def get_queryset(self):
+        return EquipoClave.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
+
+    def get_success_url(self):
+        messages.success(self.request, 'Equipo clave eliminado con éxito.')
+        return reverse_lazy('alcance_detalle', kwargs={'pk': self.object.alcance.pk})
 
 # --- Vistas para DocumentoProceso ---
 class DocumentoProcesoCreateView(LoginRequiredMixin, CreateView):
@@ -262,8 +300,34 @@ class DocumentoProcesoCreateView(LoginRequiredMixin, CreateView):
         messages.success(self.request, 'Documento de proceso añadido con éxito.')
         return super().form_valid(form)
 
+        def get_success_url(self):
+            return reverse_lazy('alcance_detalle', kwargs={'pk': self.alcance.pk})
+        
+    
+    class DocumentoProcesoUpdateView(LoginRequiredMixin, UpdateView):
+        model = DocumentoProceso
+        form_class = DocumentoProcesoForm
+        template_name = 'expedientes/generic_form.html'
+    
+        def get_queryset(self):
+            return DocumentoProceso.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
+        
+        def get_success_url(self):
+            messages.success(self.request, 'Documento actualizado con éxito.')
+            return reverse_lazy('alcance_detalle', kwargs={'pk': self.object.alcance.pk})
+
+class DocumentoProcesoDeleteView(LoginRequiredMixin, DeleteView):
+    from .models import DocumentoProceso
+    
+    model = DocumentoProceso
+    template_name = 'expedientes/generic_confirm_delete.html'
+
+    def get_queryset(self):
+        return DocumentoProceso.objects.filter(alcance__solicitud__empresa=self.request.user.empresa)
+
     def get_success_url(self):
-        return reverse_lazy('alcance_detalle', kwargs={'pk': self.alcance.pk})
+        messages.success(self.request, 'Documento eliminado con éxito.')
+        return reverse_lazy('alcance_detalle', kwargs={'pk': self.object.alcance.pk})
 
 class EnviarSolicitudView(LoginRequiredMixin, View):
     def post(self, request, *args, **kwargs):
