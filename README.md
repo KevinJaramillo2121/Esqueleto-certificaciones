@@ -1,8 +1,8 @@
-# AOXLAB - Aplicativo para la Gestión de Expedientes de Certificación
+#  - Aplicativo para la Gestión de Expedientes de Certificación
 
 ## 1. Descripción del Proyecto
 
-**AOXLAB** es una plataforma web diseñada para la administración integral del ciclo de vida de los procesos de certificación de productos, procesos y servicios. El sistema centraliza y gestiona la información desde la solicitud inicial de un cliente hasta la emisión del certificado y su seguimiento posterior, mejorando la trazabilidad, eficiencia y comunicación entre todas las partes involucradas [1].
+ es una plataforma web diseñada para la administración integral del ciclo de vida de los procesos de certificación de productos, procesos y servicios. El sistema centraliza y gestiona la información desde la solicitud inicial de un cliente hasta la emisión del certificado y su seguimiento posterior, mejorando la trazabilidad, eficiencia y comunicación entre todas las partes involucradas [1].
 
 El aplicativo está diseñado para cumplir con los estándares internacionales clave en la evaluación de la conformidad, como **ISO/IEC 17065:2012** e **ISO/IEC 17067:2013** [1].
 
@@ -33,3 +33,30 @@ Se ha implementado la funcionalidad inicial para que los clientes gestionen la i
 
 La arquitectura MVT (Modelo-Vista-Plantilla) del proyecto se ha expandido para incluir el nuevo módulo de `expedientes`.
 
+proyecto_certificacion/
+├── aoxlab_project/ # Directorio de configuración principal
+├── users/ # App para la gestión de usuarios y autenticación
+├── expedientes/ # App para la gestión de empresas, solicitudes, etc.
+│ ├── models.py # Modelos Empresa, Sede, RepresentanteLegal
+│ ├── views.py # Vistas para Dashboard y creación de Empresa
+│ ├── forms.py # Formulario para el modelo Empresa
+│ ├── urls.py # URLs específicas del módulo de expedientes
+│ └── migrations/
+├── templates/ # Plantillas HTML globales
+│ ├── expedientes/ # Plantillas para dashboard y formulario de empresa
+│ └── registration/
+└── manage.py
+
+
+## 5. Guía de Instalación y Puesta en Marcha
+
+Sigue estos pasos para configurar el entorno de desarrollo y ejecutar el proyecto en tu máquina local.
+
+*(...El resto de la guía de instalación permanece igual...)*
+
+## 6. Próximos Pasos
+
+El siguiente objetivo es expandir el **Módulo de Expedientes** para incluir:
+*   Edición de la información de la `Empresa` existente.
+*   Gestión completa (CRUD) para los modelos `Sede` y `RepresentanteLegal`, asociados a la empresa del usuario.
+*   Creación de la `Solicitud` de certificación.
