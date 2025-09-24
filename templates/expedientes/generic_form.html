@@ -1,0 +1,8 @@
+<!-- templates/expedientes/generic_form.html -->
+<h1>{{ view.model|meta:"verbose_name_plural"|capfirst }}</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Guardar</button>
+</form>

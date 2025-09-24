@@ -1,0 +1,42 @@
+<!-- templates/expedientes/alcance_detalle.html -->
+<h1>Detalle del Alcance</h1>
+<a href="{% url 'solicitud_detalle' alcance.solicitud.pk %}"><< Volver a la Solicitud</a>
+<hr>
+
+<h2>{{ alcance.tipo }}: {{ alcance.descripcion }}</h2>
+<p><strong>Referencia Normativa:</strong> {{ alcance.referencia_normativa|default:"N/A" }}</p>
+
+<!-- Sección de Personas Clave -->
+<section>
+    <h3>Personas Clave</h3>
+    {% for persona in alcance.personas_clave.all %}
+        <p>{{ persona.nombres }} - {{ persona.cargo }}</p>
+    {% empty %}
+        <p>No hay personas clave registradas para este alcance.</p>
+    {% endfor %}
+    <a href="{% url 'persona_crear' alcance.pk %}">+ Añadir Persona Clave</a>
+</section>
+<hr>
+
+<!-- Sección de Equipos Clave -->
+<section>
+    <h3>Equipos Clave</h3>
+    {% for equipo in alcance.equipos_clave.all %}
+        <p>{{ equipo.descripcion }}</p>
+    {% empty %}
+        <p>No hay equipos clave registrados para este alcance.</p>
+    {% endfor %}
+    <a href="{% url 'equipo_crear' alcance.pk %}">+ Añadir Equipo Clave</a>
+</section>
+<hr>
+
+<!-- Sección de Documentos del Proceso -->
+<section>
+    <h3>Documentación del Proceso</h3>
+    {% for documento in alcance.documentos_proceso.all %}
+        <p>{{ documento.nombre_archivo }}</p>
+    {% empty %}
+        <p>No hay documentos registrados para este alcance.</p>
+    {% endfor %}
+    <a href="{% url 'documento_crear' alcance.pk %}">+ Añadir Documento</a>
+</section>

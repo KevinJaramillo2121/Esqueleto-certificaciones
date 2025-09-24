@@ -1,0 +1,16 @@
+<!-- templates/expedientes/alcance_form.html -->
+{% if object %}
+    <h1>Editar Ítem del Alcance</h1>
+{% else %}
+    <h1>Añadir Ítem al Alcance</h1>
+{% endif %}
+
+<p>Estás trabajando en la solicitud: <strong>{{ view.solicitud|default:object.solicitud }}</strong></p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Guardar</button>
+</form>
+<br>
+<a href="{% url 'solicitud_detalle' view.solicitud.pk|default:object.solicitud.pk %}">Cancelar</a>

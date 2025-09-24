@@ -1,0 +1,98 @@
+<!-- templates/expedientes/solicitud_detalle.html -->
+
+<h1>Detalle de la Solicitud: {{ solicitud }}</h1>
+<a href="{% url 'dashboard' %}"><< Volver al Panel de Control</a>
+<hr>
+
+<!-- Sección 1: Resumen de la Solicitud -->
+<section>
+    <h2>Resumen</h2>
+    <p><strong>Fecha de Creación:</strong> {{ solicitud.fecha_creacion|date:"d F, Y" }}</p>
+    <p><strong>Estado Actual:</strong> <span style="font-weight: bold; color: #2980b9;">{{ solicitud.estado }}</span></p>
+    <p><strong>Esquema de Certificación:</strong> {{ solicitud.esquema_certificacion|default:"No especificado" }}</p>
+    
+    {% if solicitud.estado == 'Borrador' %}
+        <p style="background-color: #f1c40f; padding: 10px; border-radius: 5px;">
+            Esta solicitud está en modo <strong>Borrador</strong>. Puedes añadir o modificar el alcance de la certificación. Una vez que todo esté completo, podrás enviarla a revisión.
+        </p>
+    {% endif %}
+</section>
+
+<hr>
+
+<!-- Sección 2: Alcance de la Certificación -->
+<section>
+    <h2>Alcance de la Certificación</h2>
+    <p>Aquí puedes definir los productos, procesos o servicios que deseas certificar.</p>
+
+    {% if solicitud.alcances.all %}
+        <table border="1" style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="padding: 8px;">Tipo</th>
+                    <th style="padding: 8px;">Descripción</th>
+                    <th style="padding: 8px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for alcance in solicitud.alcances.all %}
+                <tr>
+                    <td style="padding: 8px;">{{ alcance.tipo }}</td>
+                    <td style="padding: 8px;">{{ alcance.descripcion }}</td>
+                    <td style="padding: 8px;">
+                        <!-- Estos enlaces no funcionarán todavía -->
+                        <td style="padding: 8px;">
+                            <a href="{% url 'alcance_detalle' alcance.pk %}">Ver / Gestionar Recursos</a> |
+                            <a href="{% url 'alcance_editar' alcance.pk %}">Editar</a> |
+                            <a href="{% url 'alcance_eliminar' alcance.pk %}" onclick="return confirm('¿Estás seguro de que quieres eliminar este ítem?');" style="color:red;">Eliminar</a>
+                        </td>
+                    </td>
+                </tr>
+            {% endfor %}
+
+            <a href="{% url 'alcance_editar' alcance.pk %}">Editar</a> | 
+            <a href="{% url 'alcance_eliminar' alcance.pk %}" onclick="return confirm('¿Estás seguro de que quieres eliminar este ítem?');" style="color:red;">Eliminar</a>
+
+            </tbody>
+        </table>
+        <a href="{% url 'alcance_crear' solicitud.pk %}">Añadir Ítem al Alcance</a>
+
+    {% else %}
+        <p>Aún no has añadido ningún ítem al alcance de esta solicitud.</p>
+    {% endif %}
+    
+    <br>
+    
+    {% if solicitud.estado == 'Borrador' %}
+        <!-- Este enlace tampoco funcionará todavía -->
+        <a href="#">Añadir Ítem al Alcance</a>
+    {% endif %}
+</section>
+
+<hr>
+
+<!-- Sección 3: Envío de la Solicitud -->
+<section>
+    <h2>Enviar a Revisión</h2>
+    {% if solicitud.estado == 'Borrador' %}
+        <p>
+            Una vez que hayas completado toda la información y añadido todos los ítems al alcance,
+            puedes enviar la solicitud para que sea revisada por el personal de AOXLAB.
+            <strong>Esta acción no se puede deshacer.</strong>
+        </p>
+        <!-- El botón de envío solo se muestra si hay al menos un alcance -->
+        {% if solicitud.alcances.all %}
+            <form method="post" action="{% url 'solicitud_enviar' solicitud.pk %}">
+                {% csrf_token %}
+                <button type="submit" onclick="return confirm('¿Estás seguro de que quieres enviar la solicitud a revisión? No podrás editarla después.');">
+                    Enviar Solicitud a Revisión
+                </button>
+            </form>
+        {% else %}
+            <p style="color: #c0392b;">Debe añadir al menos un ítem al alcance para poder enviar la solicitud.</p>
+        {% endif %}
+    {% else %}
+        <p>Esta solicitud ya no está en modo Borrador y no puede ser modificada.</p>
+    {% endif %}
+</section>
+

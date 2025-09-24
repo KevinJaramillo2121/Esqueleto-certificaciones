@@ -106,4 +106,32 @@ class Alcance(models.Model):
     esquema_certificacion = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
-        return f"Alcance {self.tipo}: {self.descripcion[:50]}..."
+            return f"Alcance {self.tipo}: {self.descripcion[:50]}..."
+    
+    class PersonaClave(models.Model):
+        alcance = models.ForeignKey('Alcance', on_delete=models.CASCADE, related_name='personas_clave')
+        nombres = models.CharField(max_length=100)
+        cargo = models.CharField(max_length=100)
+        formacion = models.CharField(max_length=100, blank=True)
+        experiencia = models.TextField(blank=True)
+    
+        def __str__(self):
+            return f"{self.nombres} - {self.cargo}"
+
+class EquipoClave(models.Model):
+    alcance = models.ForeignKey(Alcance, on_delete=models.CASCADE, related_name='equipos_clave')
+    descripcion = models.TextField()
+    identificacion_interna = models.CharField(max_length=50, blank=True)
+    hoja_vida = models.FileField(upload_to='equipos/hojas_vida/', blank=True, null=True)
+
+    def __str__(self):
+        return self.descripcion
+
+class DocumentoProceso(models.Model):
+    alcance = models.ForeignKey(Alcance, on_delete=models.CASCADE, related_name='documentos_proceso')
+    descripcion = models.TextField()
+    nombre_archivo = models.CharField(max_length=255)
+    archivo = models.FileField(upload_to='documentos_proceso/')
+
+    def __str__(self):
+        return self.nombre_archivo

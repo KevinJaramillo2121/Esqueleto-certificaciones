@@ -1,6 +1,6 @@
 # expedientes/forms.py
 from django import forms
-from .models import Empresa, Sede, RepresentanteLegal, Solicitud
+from .models import Empresa, Sede, RepresentanteLegal, Solicitud, Alcance, PersonaClave, DocumentoProceso, EquipoClave
 
 class EmpresaForm(forms.ModelForm):
     class Meta:
@@ -34,4 +34,27 @@ class SolicitudForm(forms.ModelForm):
         # Campos que el usuario llenará al crear la solicitud.
         # El resto ('empresa', 'usuario_solicitante', 'estado') se asignará en la vista.
         fields = ['esquema_certificacion', 'sistema_gestion', 'observaciones']
-        
+
+# Formulario para gestionar los alcances dentro de una solicitud
+class AlcanceForm(forms.ModelForm):
+    class Meta:
+        model = Alcance
+        # El usuario llenará estos campos.
+        # 'solicitud' se asignará automáticamente en la vista.
+        fields = ['tipo', 'descripcion', 'referencia_normativa', 'esquema_certificacion']
+
+
+class PersonaClaveForm(forms.ModelForm):
+    class Meta:
+        model = PersonaClave
+        fields = ['nombres', 'cargo', 'formacion', 'experiencia']
+
+class EquipoClaveForm(forms.ModelForm):
+    class Meta:
+        model = EquipoClave
+        fields = ['descripcion', 'identificacion_interna', 'hoja_vida']
+
+class DocumentoProcesoForm(forms.ModelForm):
+    class Meta:
+        model = DocumentoProceso
+        fields = ['descripcion', 'nombre_archivo', 'archivo']

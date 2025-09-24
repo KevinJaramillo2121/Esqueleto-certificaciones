@@ -1,0 +1,9 @@
+<!-- templates/expedientes/alcance_confirm_delete.html -->
+<h1>Confirmar Eliminación</h1>
+<p>¿Estás seguro de que quieres eliminar el alcance "{{ alcance.descripcion }}" de la solicitud?</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" style="color:red;">Sí, eliminar</button>
+    <a href="{% url 'solicitud_detalle' alcance.solicitud.pk %}">Cancelar</a>
+</form>
