@@ -1,0 +1,8 @@
+    <!-- templates/registration/login.html -->
+    <h2>Iniciar Sesión</h2>
+    <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Login</button>
+    </form>
+    <p><a href="{% url 'password_reset' %}">¿Olvidaste tu contraseña?</a></p>

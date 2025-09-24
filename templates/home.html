@@ -1,0 +1,7 @@
+<!-- templates/home.html -->
+<h1>Bienvenido, {{ user.nombre }}!</h1>
+<p>Has iniciado sesión correctamente.</p>
+<form action="{% url 'logout' %}" method="post">
+    {% csrf_token %}
+    <button type="submit">Cerrar Sesión</button>
+</form>

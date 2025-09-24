@@ -1,0 +1,49 @@
+# Entorno Virtual
+# ----------------------------------------------------------------
+venv/
+env/
+.venv/
+.env
+
+# Archivos compilados de Python y caché
+# ----------------------------------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de configuración de IDEs y editores
+# ----------------------------------------------------------------
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Base de datos local
+# ----------------------------------------------------------------
+*.sqlite3
+db.sqlite3
+
+# Archivos de logs y temporales
+# ----------------------------------------------------------------
+*.log
+local_settings.py
+*.swp
+
+# Archivos de dependencias de Python
+# ----------------------------------------------------------------
+pip-wheel-metadata/
+build/
+dist/
+*.egg-info/
+
+# Sistema Operativo
+# ----------------------------------------------------------------
+.DS_Store
+Thumbs.db
+
+# Archivos de testing y cobertura
+# ----------------------------------------------------------------
+.coverage
+.pytest_cache/
+htmlcov/
