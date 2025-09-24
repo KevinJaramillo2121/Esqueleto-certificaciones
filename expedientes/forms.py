@@ -1,6 +1,6 @@
 # expedientes/forms.py
 from django import forms
-from .models import Empresa, Sede, RepresentanteLegal
+from .models import Empresa, Sede, RepresentanteLegal, Solicitud
 
 class EmpresaForm(forms.ModelForm):
     class Meta:
@@ -26,3 +26,12 @@ class RepresentanteLegalForm(forms.ModelForm):
             'tipo_documento', 'numero_documento', 'nombres', 'apellidos',
             'correo_personal', 'telefono_movil', 'documento_pdf'
         ]
+
+# Formulario para crear una nueva solicitud de certificación
+class SolicitudForm(forms.ModelForm):
+    class Meta:
+        model = Solicitud
+        # Campos que el usuario llenará al crear la solicitud.
+        # El resto ('empresa', 'usuario_solicitante', 'estado') se asignará en la vista.
+        fields = ['esquema_certificacion', 'sistema_gestion', 'observaciones']
+        

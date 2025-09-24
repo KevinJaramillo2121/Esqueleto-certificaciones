@@ -2,10 +2,11 @@
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Empresa, Sede, RepresentanteLegal
-from .forms import EmpresaForm, SedeForm, RepresentanteLegalForm
+from .models import Empresa, Sede, RepresentanteLegal, Solicitud
+from .forms import EmpresaForm, SedeForm, RepresentanteLegalForm, SolicitudForm
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView
+from django.contrib import messages 
 
 
 # Usamos LoginRequiredMixin para proteger esta vista.
@@ -105,3 +106,33 @@ class RepresentanteLegalUpdateView(LoginRequiredMixin, UpdateView):
     # el representante legal asociado a SU empresa.
     def get_object(self, queryset=None):
         return self.request.user.empresa.representantelegal
+
+class SolicitudCreateView(LoginRequiredMixin, CreateView):
+    model = Solicitud
+    form_class = SolicitudForm
+    template_name = 'expedientes/solicitud_form.html'
+    
+    # Redirigiremos a la página de detalle de la solicitud recién creada (la haremos después)
+    def get_success_url(self):
+        return reverse_lazy('solicitud_detalle', kwargs={'pk': self.object.pk})
+
+    # Este método se ejecuta ANTES que cualquier otro.
+    # Es el lugar perfecto para verificar si el usuario cumple los requisitos.
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            # Comprueba si la empresa y el representante legal existen.
+            empresa = request.user.empresa
+            representante = empresa.representantelegal
+        except (Empresa.DoesNotExist, RepresentanteLegal.DoesNotExist):
+            # Si algo falta, muestra un mensaje de error y redirige al dashboard.
+            messages.error(request, 'Debe completar la información de la Empresa y del Representante Legal antes de crear una solicitud.')
+            return redirect('dashboard')
+        
+        return super().dispatch(request, *args, **kwargs)
+
+    # Cuando el formulario es válido, asignamos los datos automáticos.
+    def form_valid(self, form):
+        form.instance.empresa = self.request.user.empresa
+        form.instance.usuario_solicitante = self.request.user
+        messages.success(self.request, '¡Solicitud iniciada con éxito! Ahora puede añadir el alcance de la certificación.')
+        return super().form_valid(form)

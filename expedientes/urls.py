@@ -2,7 +2,7 @@
 from django.urls import path
 from .views import DashboardView
 from .views import EmpresaCreateView
-from .views import EmpresaUpdateView, SedeCreateView, SedeDeleteView, SedeUpdateView, RepresentanteLegalCreateView, RepresentanteLegalUpdateView
+from .views import EmpresaUpdateView, SedeCreateView, SedeDeleteView, SedeUpdateView, RepresentanteLegalCreateView, RepresentanteLegalUpdateView, SolicitudCreateView
 
 urlpatterns = [
         # Dashboard del usuario
@@ -32,4 +32,8 @@ urlpatterns = [
     # Editar un representante legal existente
     path('representante/editar/', RepresentanteLegalUpdateView.as_view(), name='representante_editar'),
 
+    # Aquí añadiremos las URLs para crear/editar solicitudes más adelante
+    path('solicitud/crear/', SolicitudCreateView.as_view(), name='solicitud_crear'),
 ]
+
+

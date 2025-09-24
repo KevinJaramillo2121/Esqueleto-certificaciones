@@ -103,7 +103,29 @@
     {% else %}
         <p>Aún no has creado ninguna solicitud.</p>
     {% endif %}
+
     <br>
-    <!-- Este botón no funcionará aún, lo conectaremos en el siguiente paso -->
-    <a href="#">Crear Nueva Solicitud</a>
+{% if empresa and empresa.representantelegal %}
+    <!-- El botón solo aparece si la información está completa -->
+    <a href="{% url 'solicitud_crear' %}">Crear Nueva Solicitud</a>
+{% else %}
+    <p style="color: #c0392b;">
+        <em>Para crear una nueva solicitud, primero debe completar la información de su Empresa y del Representante Legal.</em>
+    </p>
+{% endif %}
+
+<!-- También modifica la tabla para que el enlace "Ver/Editar" apunte a la futura vista de detalle -->
+<a href="{% url 'solicitud_detalle' solicitud.pk %}">Ver/Editar</a>
 </section>
+
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %} 
+                style="padding: 10px; list-style: none; background-color: #f2f2f2; border-left: 5px solid #2ecc71;">
+                {{ message }}
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
+<!-- Fin de templates/expedientes/dashboard.html -->

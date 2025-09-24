@@ -1,0 +1,15 @@
+<!-- templates/expedientes/solicitud_form.html -->
+<h1>Iniciar Nueva Solicitud de Certificación</h1>
+<p>
+    Estás a punto de iniciar una nueva solicitud para la empresa <strong>{{ user.empresa.razon_social }}</strong>.
+    Completa la información inicial a continuación.
+</p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Iniciar Solicitud</button>
+</form>
+
+<br>
+<a href="{% url 'dashboard' %}">Cancelar y volver al Panel de Control</a>
