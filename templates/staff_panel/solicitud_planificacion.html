@@ -1,0 +1,49 @@
+<h1>Planificación de Evaluación para Solicitud: {{ solicitud }}</h1>
+<a href="{% url 'staff_dashboard' %}"><< Volver al Panel</a>
+<hr>
+
+<p>Asigna las actividades y los evaluadores necesarios para este proceso de certificación.</p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    
+    <table border="1" style="width:100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th>Actividad</th>
+                <th>Evaluador Asignado</th>
+                <th>Fecha Inicio</th>
+                <th>Días</th>
+                <th>Fecha Límite Evidencias</th>
+                <th>¿Eliminar?</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for form in formset %}
+            <tr>
+                <td>{{ form.nombre }}</td>
+                <td>{{ form.evaluador_asignado }}</td>
+                <td>{{ form.fecha_inicio_planificada }}</td>
+                <td>{{ form.dias_planificados }}</td>
+                <td>{{ form.fecha_limite_evidencias }}</td>
+                <td>{% if form.instance.pk %}{{ form.DELETE }}{% endif %}</td>
+                {{ form.id }}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <button type="submit">Guardar Planificación</button>
+</form>
+
+    <!-- Formulario para confirmar e iniciar la ejecución -->
+<hr>
+<form method="post" action="{% url 'iniciar_ejecucion' solicitud.pk %}" style="margin-top: 20px;">
+    {% csrf_token %}
+    <button type="submit" 
+            style="background-color: #27ae60; color: white;"
+            onclick="return confirm('¿Estás seguro de que quieres confirmar la planificación e iniciar la ejecución? Este cambio de estado notificará a los evaluadores.')">
+        Confirmar e Iniciar Ejecución
+    </button> 
+</form>

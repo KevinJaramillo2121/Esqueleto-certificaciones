@@ -1,0 +1,7 @@
+<h1>Confirmar Eliminación</h1>
+<p>¿Estás seguro de que quieres eliminar al evaluador "{{ evaluador }}"?</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" style="color:red;">Sí, eliminar</button>
+    <a href="{% url 'evaluador_list' %}">Cancelar</a>
+</form>

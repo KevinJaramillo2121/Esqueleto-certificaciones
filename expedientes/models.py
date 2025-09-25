@@ -114,3 +114,34 @@ class DocumentoProceso(models.Model):
 
     def __str__(self):
         return self.nombre_archivo
+
+
+class Evaluador(models.Model):
+    nombres = models.CharField(max_length=100)
+    apellidos = models.CharField(max_length=100)
+    telefono = models.CharField(max_length=30, blank=True)
+    correo = models.EmailField(unique=True)
+    # Según el documento de requisitos, para gestionar el costo por día.
+    costo_dia = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    # "Campo de acción" se puede interpretar como sus especialidades.
+    campo_accion = models.TextField(blank=True, help_text="Describa las áreas de especialización, separadas por comas.")
+
+    def __str__(self):
+        return f"{self.nombres} {self.apellidos}"
+
+# Nota: Más adelante añadiremos aquí los modelos, Revision, Certificado, etc.
+
+
+class Actividad(models.Model):
+    solicitud = models.ForeignKey(Solicitud, on_delete=models.CASCADE, related_name='actividades')
+    evaluador_asignado = models.ForeignKey(Evaluador, on_delete=models.SET_NULL, null=True, blank=True)
+    nombre = models.CharField(max_length=255, help_text="Ej: Auditoría en sitio, Revisión documental inicial")
+    fecha_inicio_planificada = models.DateField()
+    dias_planificados = models.PositiveIntegerField(default=1)
+    fecha_limite_evidencias = models.DateField()
+    
+    # Este campo nos servirá más adelante en la Fase 6
+    estado = models.CharField(max_length=50, default='Planificada')
+
+    def __str__(self):
+        return f"Actividad '{self.nombre}' para Solicitud {self.solicitud.id}"

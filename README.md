@@ -1,22 +1,18 @@
-## Estado Actual del Proyecto (Fin de Ciclo de Revisión)
+## Estado Actual del Proyecto (Fin de Fase 5)
 
-La aplicación ahora soporta un flujo de trabajo completo y robusto para la creación, envío, revisión y corrección de solicitudes de certificación.
+La aplicación ahora soporta los flujos de trabajo completos desde la creación de la solicitud por parte del cliente hasta la planificación detallada de la evaluación por parte del Director de Certificaciones.
 
 ### Funcionalidades Implementadas:
 
-*   **Flujo del Cliente:** Creación de perfil, diligenciamiento detallado de solicitudes y envío a revisión.
-*   **Flujo de Revisión y Subsanación (Completado):**
-    *   **Panel de Staff:** El personal interno tiene un dashboard para ver las solicitudes pendientes.
-    *   **Revisión Interna:** Una interfaz permite al personal marcar ítems como "Conforme" o "No Conforme" con observaciones.
-    *   **Ciclo de Corrección del Cliente:** El cliente es notificado, ve las observaciones, puede editar la solicitud y reenviarla para una nueva revisión.
-    *   **Automatización de Estados:** El sistema gestiona los estados (`En Revisión`, `En Subsanación`) automáticamente.
+*   **Flujo del Cliente (Completado):** Creación de perfil y diligenciamiento de solicitudes.
+*   **Flujo de Revisión y Subsanación (Completado):** Interacción entre el personal y el cliente para corregir solicitudes.
+*   **Flujo de Planificación (Completado):**
+    *   Un Director de Certificaciones puede gestionar una base de datos de Evaluadores (CRUD).
+    *   Para las solicitudes aprobadas, el Director puede crear un plan de evaluación, asignando actividades, evaluadores y fechas.
+    *   Una vez planificada, el Director puede cambiar el estado de la solicitud a "En Ejecución", preparándola para la siguiente fase.
 
-## Cómo Ejecutar el Proyecto
-*(Esta sección permanece igual)*
-
-## Siguientes Pasos (Fase 5)
-La próxima fase de desarrollo se centrará en el **Módulo de Planificación de la Evaluación**, que incluye:
--   Gestión de la base de datos de Evaluadores.
--   Interfaz para que un Director de Certificaciones asigne actividades, evaluadores y fechas a las solicitudes aprobadas.
--   Cálculo de costos y generación de cotizaciones.
-
+## Siguientes Pasos (Fase 6)
+La próxima fase de desarrollo se centrará en el **Módulo de Ejecución y Revisión de Evidencias**, que incluye:
+-   Crear un dashboard para el rol "Evaluador" donde vea sus tareas asignadas.
+-   Implementar la funcionalidad para que los evaluadores puedan cargar archivos de evidencia para cada actividad.
+-   Desarrollar la interfaz para que un Revisor o Director verifique dichas evidencias.

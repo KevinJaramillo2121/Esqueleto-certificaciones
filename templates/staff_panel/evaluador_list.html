@@ -1,0 +1,16 @@
+<h1>Gestión de Evaluadores</h1>
+<a href="{% url 'staff_dashboard' %}"><< Volver al Panel</a> | <a href="{% url 'evaluador_crear' %}">Añadir Nuevo Evaluador</a>
+<hr>
+<table border="1">
+    <thead><tr><th>Nombre</th><th>Correo</th><th>Costo/Día</th><th>Acciones</th></tr></thead>
+    <tbody>
+        {% for evaluador in evaluadores %}
+        <tr>
+            <td>{{ evaluador }}</td>
+            <td>{{ evaluador.correo }}</td>
+            <td>${{ evaluador.costo_dia }}</td>
+            <td><a href="{% url 'evaluador_editar' evaluador.pk %}">Editar</a> | <a href="{% url 'evaluador_eliminar' evaluador.pk %}" style="color:red;">Eliminar</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

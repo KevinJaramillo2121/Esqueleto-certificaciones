@@ -1,6 +1,7 @@
 # staff_panel/forms.py
 from django import forms
-from expedientes.models import Solicitud, Alcance
+from expedientes.models import Solicitud, Alcance, Evaluador, Actividad
+
 
 # Este es el formulario para cada fila (cada alcance)
 class AlcanceRevisionForm(forms.ModelForm):
@@ -24,4 +25,18 @@ AlcanceRevisionFormSet = forms.inlineformset_factory(
     form=AlcanceRevisionForm,
     extra=0,
     can_delete=False
+)
+
+
+class EvaluadorForm(forms.ModelForm):
+    class Meta:
+        model = Evaluador
+        fields = ['nombres', 'apellidos', 'correo', 'telefono', 'costo_dia', 'campo_accion']
+
+ActividadFormSet = forms.inlineformset_factory(
+    Solicitud,      # Modelo Padre
+    Actividad,      # Modelo Hijo
+    fields=('nombre', 'evaluador_asignado', 'fecha_inicio_planificada', 'dias_planificados', 'fecha_limite_evidencias'),
+    extra=1,        # Muestra 1 formulario vacío por defecto
+    can_delete=True
 )
