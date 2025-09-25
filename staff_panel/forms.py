@@ -1,6 +1,6 @@
 # staff_panel/forms.py
 from django import forms
-from expedientes.models import Solicitud, Alcance, Evaluador, Actividad
+from expedientes.models import Solicitud, Alcance, Evaluador, Actividad, Evidencia
 
 
 # Este es el formulario para cada fila (cada alcance)
@@ -39,4 +39,35 @@ ActividadFormSet = forms.inlineformset_factory(
     fields=('nombre', 'evaluador_asignado', 'fecha_inicio_planificada', 'dias_planificados', 'fecha_limite_evidencias'),
     extra=1,        # Muestra 1 formulario vacío por defecto
     can_delete=True
+)
+
+class EvidenciaForm(forms.ModelForm):
+    class Meta:
+        model = Evidencia
+        fields = ['archivo', 'descripcion']
+        # Hacemos que la descripción sea opcional
+        widgets = {
+            'descripcion': forms.TextInput(attrs={'placeholder': 'Ej: Acta de reunión, Informe de laboratorio, etc.'}),
+        }
+
+
+class EvidenciaRevisionForm(forms.ModelForm):
+    class Meta:
+        model = Evidencia
+        # Solo exponemos los campos de revisión
+        fields = ['revision_conforme', 'revision_observaciones']
+        widgets = {
+            'revision_conforme': forms.Select(choices=[
+                (None, '---'),
+                (True, 'Conforme'),
+                (False, 'No Conforme')
+            ]),
+            'revision_observaciones': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Añadir observación si no es conforme...'}),
+        }
+
+# Creamos un FormSet basado en el modelo, no anidado.
+EvidenciaRevisionFormSet = forms.modelformset_factory(
+    Evidencia,
+    form=EvidenciaRevisionForm,
+    extra=0  # No mostrar formularios vacíos extra
 )

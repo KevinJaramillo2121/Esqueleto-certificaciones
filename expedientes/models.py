@@ -3,6 +3,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.conf import settings 
 
 # Modelo Empresa
 class Empresa(models.Model):
@@ -117,6 +118,7 @@ class DocumentoProceso(models.Model):
 
 
 class Evaluador(models.Model):
+    usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='perfil_evaluador')
     nombres = models.CharField(max_length=100)
     apellidos = models.CharField(max_length=100)
     telefono = models.CharField(max_length=30, blank=True)
@@ -141,7 +143,28 @@ class Actividad(models.Model):
     fecha_limite_evidencias = models.DateField()
     
     # Este campo nos servirá más adelante en la Fase 6
-    estado = models.CharField(max_length=50, default='Planificada')
+    
+
+    ESTADO_ACTIVIDAD_CHOICES = [
+        ('Planificada', 'Planificada'),
+        ('En Ejecución', 'En Ejecución'),
+        ('Con Inconsistencias', 'Con Inconsistencias'),
+        ('Completada', 'Completada'),
+    ]
+    estado = models.CharField(max_length=50, choices=ESTADO_ACTIVIDAD_CHOICES, default='Planificada')
 
     def __str__(self):
         return f"Actividad '{self.nombre}' para Solicitud {self.solicitud.id}"
+
+class Evidencia(models.Model):
+    actividad = models.ForeignKey(Actividad, on_delete=models.CASCADE, related_name='evidencias')
+    archivo = models.FileField(upload_to='evidencias/')
+    descripcion = models.CharField(max_length=255, blank=True)
+    fecha_carga = models.DateTimeField(auto_now_add=True)
+    
+    # Más adelante añadiremos aquí campos para la revisión de la evidencia.
+    revision_conforme = models.BooleanField(null=True, default=None)
+    revision_observaciones = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"Evidencia para actividad {self.actividad.id}: {self.descripcion}"

@@ -2,7 +2,8 @@
 from django.urls import path
 from .views import (
     StaffDashboardView, SolicitudRevisionView,
-    EvaluadorListView, EvaluadorCreateView, EvaluadorUpdateView, EvaluadorDeleteView, SolicitudPlanificacionView, IniciarEjecucionView
+    EvaluadorListView, EvaluadorCreateView, EvaluadorUpdateView, EvaluadorDeleteView, SolicitudPlanificacionView, IniciarEjecucionView,
+    EvaluadorDashboardView, ActividadDetailView, SolicitudEvidenciaRevisionView
 )
 
 urlpatterns = [
@@ -20,5 +21,15 @@ urlpatterns = [
 
         # Nueva ruta para iniciar la ejecución de la solicitud
     path('staff/solicitud/<int:pk>/iniciar_ejecucion/', IniciarEjecucionView.as_view(), name='iniciar_ejecucion'),
+
+        # Nueva ruta para el dashboard del evaluador
+    path('evaluador/dashboard/', EvaluadorDashboardView.as_view(), name='evaluador_dashboard'),
+    
+
+        # Nueva ruta para ver los detalles de una actividad y subir evidencias
+    path('evaluador/actividad/<int:pk>/', ActividadDetailView.as_view(), name='actividad_detail'),
+
+        # Nueva ruta para que el evaluador revise las evidencias de una solicitud
+    path('staff/solicitud/<int:pk>/revisar-evidencias/', SolicitudEvidenciaRevisionView.as_view(), name='solicitud_evidencia_revision'),
 
 ]

@@ -1,0 +1,46 @@
+<!-- templates/staff_panel/evaluador_dashboard.html (Corregido y Organizado) -->
+
+<h1>Panel de Control del Evaluador</h1>
+<p>Bienvenido, {{ request.user.perfil_evaluador }}. Aquí están tus tareas asignadas.</p>
+<hr>
+
+<section>
+    <h2>Mis Actividades</h2>
+    <table border="1" style="width:100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th style="padding: 8px;">Actividad</th>
+                <th style="padding: 8px;">Solicitud</th>
+                <th style="padding: 8px;">Estado de la Tarea</th>
+                <th style="padding: 8px;">Fecha Límite Evidencias</th>
+                <th style="padding: 8px;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for actividad in actividades_asignadas %}
+                <!-- Resaltamos la fila si la tarea fue devuelta con observaciones -->
+                <tr {% if actividad.estado == 'Con Inconsistencias' %}style="background-color: #ffe6e6;"{% endif %}>
+                    <td style="padding: 8px;">{{ actividad.nombre }}</td>
+                    <td style="padding: 8px;">
+                        {{ actividad.solicitud }} <br>
+                        <small>({{ actividad.solicitud.empresa.razon_social }})</small>
+                    </td>
+                    <td style="padding: 8px;">
+                        <strong>{{ actividad.estado }}</strong>
+                        {% if actividad.estado == 'Con Inconsistencias' %}
+                            <br><small style="color: #c0392b;">(Requiere tu atención)</small>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 8px;">{{ actividad.fecha_limite_evidencias|date:"d F, Y" }}</td>
+                    <td style="padding: 8px;">
+                        <a href="{% url 'actividad_detail' actividad.pk %}">Gestionar Evidencias</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" style="padding: 15px; text-align: center;">No tienes actividades asignadas en este momento.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>

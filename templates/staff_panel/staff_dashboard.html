@@ -73,6 +73,29 @@
 </section>
 
 <hr>
+<section>
+    <h2>Solicitudes en Ejecución (Pendientes de Revisión de Evidencias)</h2>
+    {% if solicitudes_en_ejecucion %}
+        <table border="1">
+            <!-- ... (similar a las otras tablas) ... -->
+            <tbody>
+                {% for solicitud in solicitudes_en_ejecucion %}
+                <tr>
+                    <td>{{ solicitud }}</td>
+                    <td>{{ solicitud.empresa.razon_social }}</td>
+                    <td>
+                        <a href="{% url 'solicitud_evidencia_revision' solicitud.pk %}">Revisar Evidencias</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay solicitudes en ejecución en este momento.</p>
+    {% endif %}
+</section>
+
+<hr>
 <form action="{% url 'logout' %}" method="post" style="margin-top: 20px;">
     {% csrf_token %}
     <button type="submit">Cerrar Sesión</button>

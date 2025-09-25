@@ -1,0 +1,38 @@
+<h1>Revisión de Evidencias para Solicitud: {{ solicitud }}</h1>
+<a href="{% url 'staff_dashboard' %}"><< Volver al Panel</a>
+<hr>
+
+<p>Verifica cada evidencia cargada por el evaluador. Marca su estado y añade observaciones si es necesario.</p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+
+    <table border="1" style="width:100%; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th>Actividad</th>
+                <th>Evidencia</th>
+                <th>Estado</th>
+                <th>Observaciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for form in formset %}
+            <tr>
+                <td>{{ form.instance.actividad.nombre }}</td>
+                <td>
+                    <a href="{{ form.instance.archivo.url }}" target="_blank">
+                        {{ form.instance.descripcion|default:"Descargar Archivo" }}
+                    </a>
+                </td>
+                <td>{{ form.revision_conforme }}</td>
+                <td>{{ form.revision_observaciones }}</td>
+                {{ form.id }}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <button type="submit">Guardar Revisión de Evidencias</button>
+</form>

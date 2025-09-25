@@ -1,0 +1,71 @@
+<!-- templates/staff_panel/actividad_detail.html (Corregido y Organizado) -->
+
+<h1>Detalle de Actividad: {{ actividad.nombre }}</h1>
+<a href="{% url 'evaluador_dashboard' %}"><< Volver al Panel de Evaluador</a>
+<hr>
+
+<section>
+    <h2>Información de la Tarea</h2>
+    <p><strong>Solicitud:</strong> {{ actividad.solicitud }}</p>
+    <p><strong>Empresa:</strong> {{ actividad.solicitud.empresa.razon_social }}</p>
+    <p><strong>Fecha Límite para Carga de Evidencias:</strong> <span style="color: #c0392b;">{{ actividad.fecha_limite_evidencias|date:"d F, Y" }}</span></p>
+    {% if actividad.estado == 'Con Inconsistencias' %}
+        <div style="background-color: #e74c3c; color: white; padding: 15px; border-radius: 5px; margin: 15px 0;">
+            <strong>¡Atención!</strong> Esta actividad fue devuelta con observaciones. Por favor, revisa los comentarios en las evidencias, sube los archivos corregidos y la tarea se reenviará automáticamente a revisión.
+        </div>
+    {% endif %}
+</section>
+
+<hr>
+
+<section>
+    <h2>Cargar Nueva Evidencia</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Subir Archivo</button>
+    </form>
+</section>
+
+<hr>
+
+<section>
+    <h2>Evidencias Cargadas</h2>
+    {% if evidencias %}
+        <table border="1" style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 8px;">Descripción</th>
+                    <th style="padding: 8px;">Archivo</th>
+                    <th style="padding: 8px;">Fecha de Carga</th>
+                    <th style="padding: 8px;">Estado de la Revisión</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for evidencia in evidencias %}
+                    <tr {% if evidencia.revision_conforme == False %}style="background-color: #ffe6e6;"{% endif %}>
+                        <td style="padding: 8px;">{{ evidencia.descripcion|default:"Sin descripción" }}</td>
+                        <td style="padding: 8px;"><a href="{{ evidencia.archivo.url }}" target="_blank">Descargar</a></td>
+                        <td style="padding: 8px;">{{ evidencia.fecha_carga|date:"d M, Y H:i" }}</td>
+                        <td style="padding: 8px;">
+                            {% if evidencia.revision_conforme is True %}
+                                <span style="color: #27ae60;">Conforme</span>
+                            {% elif evidencia.revision_conforme is False %}
+                                <strong style="color: #c0392b;">No Conforme</strong>
+                                {% if evidencia.revision_observaciones %}
+                                    <p style="color:#c0392b; font-size: 0.9em; margin: 5px 0 0 0;">
+                                        <em>{{ evidencia.revision_observaciones }}</em>
+                                    </p>
+                                {% endif %}
+                            {% else %}
+                                <span>Pendiente de Revisión</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Todavía no has cargado ninguna evidencia para esta actividad.</p>
+    {% endif %}
+</section>

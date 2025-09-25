@@ -12,13 +12,13 @@ class SignUpView(generic.CreateView):
 
 class CustomLoginView(LoginView):
     def form_valid(self, form):
-        """
-        Sobrescribimos este método para redirigir al usuario según su tipo.
-        """
-        super().form_valid(form) # Primero, autentica al usuario
+        super().form_valid(form)
         
-        # Ahora, comprobamos si es 'staff'
+        # AÑADIMOS ESTA LÓGICA
+        if hasattr(self.request.user, 'perfil_evaluador'):
+            return redirect('evaluador_dashboard')
+        
         if self.request.user.is_staff:
-            return redirect('staff_dashboard') # Redirige al panel de staff
+            return redirect('staff_dashboard')
         else:
-            return redirect('dashboard') # Redirige al dashboard de cliente
+            return redirect('dashboard')

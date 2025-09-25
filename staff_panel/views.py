@@ -1,27 +1,29 @@
 # staff_panel/views.py
 from django.shortcuts import render
 from django.views import View
-from users.mixins import StaffRequiredMixin # <-- Importamos nuestro mixin
+from users.mixins import StaffRequiredMixin, EvaluadorRequiredMixin, RevisorRequiredMixin # <-- Importamos nuestro mixin
 from expedientes.models import Solicitud
-from .forms import AlcanceRevisionFormSet, EvaluadorForm # <-- Importamos nuestro FormSet
+from .forms import AlcanceRevisionFormSet, EvaluadorForm, EvidenciaForm, EvidenciaRevisionFormSet # <-- Importamos nuestro FormSet
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from expedientes.models import Evaluador 
+from expedientes.models import Evaluador, Actividad, Evidencia
 from .forms import ActividadFormSet # <-- Importa el nuevo FormSet
 
 
         # Vista del panel de staff
 class StaffDashboardView(StaffRequiredMixin, View):
     def get(self, request, *args, **kwargs):
-        solicitudes_por_revisar = Solicitud.objects.filter(estado='En Revisión').order_by('fecha_creacion')
+        # ... (queries existentes) ...
+        solicitudes_por_planificar = Solicitud.objects.filter(estado='En Planificación')
         # NUEVA QUERY
-        solicitudes_por_planificar = Solicitud.objects.filter(estado='En Planificación').order_by('fecha_creacion')
+        solicitudes_en_ejecucion = Solicitud.objects.filter(estado='En Ejecución')
 
         context = {
-            'solicitudes_por_revisar': solicitudes_por_revisar,
-            'solicitudes_por_planificar': solicitudes_por_planificar, # NUEVO CONTEXTO
+            # ... (contexto existente) ...
+            'solicitudes_por_planificar': solicitudes_por_planificar,
+            'solicitudes_en_ejecucion': solicitudes_en_ejecucion, # NUEVO
         }
         return render(request, 'staff_panel/staff_dashboard.html', context)
 
@@ -99,6 +101,7 @@ class EvaluadorDeleteView(StaffRequiredMixin, DeleteView):
     success_url = reverse_lazy('evaluador_list')
     context_object_name = 'evaluador'
 
+
         # Nueva vista para la planificación de la solicitud
 class SolicitudPlanificacionView(StaffRequiredMixin, View):
     template_name = 'staff_panel/solicitud_planificacion.html'
@@ -120,6 +123,7 @@ class SolicitudPlanificacionView(StaffRequiredMixin, View):
         messages.error(request, 'Por favor, corrige los errores en el formulario.')
         return render(request, self.template_name, {'solicitud': solicitud, 'formset': formset})
 
+
         # Vista para iniciar la ejecución de la solicitud
 class IniciarEjecucionView(StaffRequiredMixin, View):
     def post(self, request, *args, **kwargs):
@@ -136,5 +140,133 @@ class IniciarEjecucionView(StaffRequiredMixin, View):
         solicitud.estado = 'En Ejecución'
         solicitud.save()
 
+        solicitud.actividades.update(estado='En Ejecución')
+
         messages.success(request, f'La solicitud {solicitud} ha pasado al estado "En Ejecución". Las tareas ahora serán visibles para los evaluadores asignados.')
         return redirect('staff_dashboard')
+
+
+        # Nueva vista para el dashboard del evaluador
+class EvaluadorDashboardView(EvaluadorRequiredMixin, ListView):
+    model = Actividad
+    template_name = 'staff_panel/evaluador_dashboard.html'
+    context_object_name = 'actividades_asignadas'
+
+    def get_queryset(self):
+        # Filtramos las actividades para mostrar solo las asignadas al evaluador logueado
+        # y que pertenecen a una solicitud que está "En Ejecución".
+        return Actividad.objects.filter(
+            evaluador_asignado=self.request.user.perfil_evaluador,
+            solicitud__estado='En Ejecución'
+        ).order_by('fecha_inicio_planificada')
+
+
+        # Vista para ver los detalles de una actividad y subir evidencias
+class ActividadDetailView(EvaluadorRequiredMixin, View):
+    template_name = 'staff_panel/actividad_detail.html'
+
+    def get(self, request, *args, **kwargs):
+        # Obtenemos la actividad, asegurando que pertenece al evaluador logueado
+        actividad = get_object_or_404(
+            Actividad, 
+            pk=kwargs['pk'], 
+            evaluador_asignado=request.user.perfil_evaluador
+        )
+        
+        form = EvidenciaForm()
+        evidencias = actividad.evidencias.all().order_by('-fecha_carga')
+
+        context = {
+            'actividad': actividad,
+            'evidencias': evidencias,
+            'form': form
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        actividad = get_object_or_404(
+            Actividad, 
+            pk=kwargs['pk'], 
+            evaluador_asignado=request.user.perfil_evaluador
+        )
+        
+        form = EvidenciaForm(request.POST, request.FILES)
+        
+        if form.is_valid():
+            nueva_evidencia = form.save(commit=False)
+            nueva_evidencia.actividad = actividad
+            nueva_evidencia.save()
+            messages.success(request, 'Evidencia subida correctamente.')
+
+            # --- LÓGICA CONDICIONAL CORRECTA ---
+            # Solo si la actividad fue devuelta, la marcamos como corregida.
+            if actividad.estado == 'Con Inconsistencias':
+                # Limpiamos las marcas de revisión de TODAS las evidencias de esta actividad
+                actividad.evidencias.update(revision_conforme=None, revision_observaciones='')
+                # Devolvemos la actividad a su estado de trabajo normal
+                actividad.estado = 'En Ejecución'
+                actividad.save()
+                messages.info(request, 'La actividad ha sido marcada como corregida y enviada nuevamente a revisión.')
+            
+            return redirect('actividad_detail', pk=actividad.pk)
+
+        # Si el formulario no es válido, se mantiene el flujo de error.
+        evidencias = actividad.evidencias.all().order_by('-fecha_carga')
+        context = {
+            'actividad': actividad,
+            'evidencias': evidencias,
+            'form': form
+        }
+        messages.error(request, 'Hubo un error al subir el archivo. Por favor, inténtalo de nuevo.')
+        return render(request, self.template_name, context)
+
+class SolicitudEvidenciaRevisionView(RevisorRequiredMixin, View):
+    template_name = 'staff_panel/solicitud_evidencia_revision.html'
+
+    def get(self, request, *args, **kwargs):
+        solicitud = get_object_or_404(Solicitud, pk=kwargs['pk'], estado='En Ejecución')
+        # Obtenemos todas las evidencias relacionadas con esta solicitud
+        queryset = Evidencia.objects.filter(actividad__solicitud=solicitud).order_by('actividad__nombre')
+        formset = EvidenciaRevisionFormSet(queryset=queryset)
+        
+        context = {'solicitud': solicitud, 'formset': formset}
+        return render(request, self.template_name, context)
+
+def post(self, request, *args, **kwargs):
+        solicitud = get_object_or_404(Solicitud, pk=kwargs['pk'], estado='En Ejecución')
+        queryset = Evidencia.objects.filter(actividad__solicitud=solicitud)
+        formset = EvidenciaRevisionFormSet(request.POST, queryset=queryset)
+
+        if formset.is_valid():
+            formset.save()
+
+            # Actualizamos el estado de cada actividad individualmente
+            for actividad in solicitud.actividades.all():
+                evidencias_actividad = actividad.evidencias.all()
+                if not evidencias_actividad:
+                    continue # La actividad no tiene evidencias, la ignoramos
+
+                # Si alguna evidencia de esta actividad fue rechazada
+                if any(ev.revision_conforme is False for ev in evidencias_actividad):
+                    actividad.estado = 'Con Inconsistencias'
+                # Si todas las evidencias fueron revisadas y todas están conformes
+                elif all(ev.revision_conforme is True for ev in evidencias_actividad):
+                    actividad.estado = 'Completada'
+                actividad.save()
+
+            # Finalmente, comprobamos el estado general de la solicitud
+            todas_actividades_completadas = all(
+                act.estado == 'Completada' for act in solicitud.actividades.all()
+            )
+            if todas_actividades_completadas:
+                solicitud.estado = 'Revisión de Evidencias' # Estado final de la fase
+                solicitud.save()
+                messages.success(request, 'Todas las evidencias han sido aprobadas. La solicitud pasa a Revisión Final.')
+            else:
+                messages.warning(request, 'Se han guardado las revisiones. Algunas actividades han sido devueltas a los evaluadores con observaciones.')
+
+            return redirect('staff_dashboard')
+        
+
+        context = {'solicitud': solicitud, 'formset': formset}
+        return render(request, self.template_name, context)
