@@ -96,6 +96,56 @@
 </section>
 
 <hr>
+<section>
+    <h2>Expedientes Pendientes de Decisión Final</h2>
+    {% if solicitudes_para_decision %}
+        <table border="1" style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th>ID Solicitud</th>
+                    <th>Empresa</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for solicitud in solicitudes_para_decision %}
+                <tr>
+                    <td>{{ solicitud }}</td>
+                    <td>{{ solicitud.empresa.razon_social }}</td>
+                    <td>
+                        <a href="{% url 'expediente_decision' solicitud.pk %}">Revisar y Decidir</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay expedientes pendientes de decisión final.</p>
+    {% endif %}
+</section>
+
+<hr>
+<section>
+    <h2>Expedientes Aprobados</h2>
+    <table border="1" style="width:100%; border-collapse: collapse;">
+        <!-- ... (thead) ... -->
+        <tbody>
+            {% for solicitud in solicitudes.all %}
+                {% if solicitud.estado == 'Aprobado' %}
+                <tr>
+                    <td>{{ solicitud }}</td>
+                    <td>{{ solicitud.empresa.razon_social }}</td>
+                    <td>
+                        <a href="{% url 'generar_certificado' solicitud.pk %}" style="color:green;">Generar y Descargar Certificado</a>
+                    </td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<hr>
 <form action="{% url 'logout' %}" method="post" style="margin-top: 20px;">
     {% csrf_token %}
     <button type="submit">Cerrar Sesión</button>

@@ -1,8 +1,8 @@
 # staff_panel/views.py
 from django.shortcuts import render
 from django.views import View
-from users.mixins import StaffRequiredMixin, EvaluadorRequiredMixin, RevisorRequiredMixin # <-- Importamos nuestro mixin
-from expedientes.models import Solicitud
+from users.mixins import StaffRequiredMixin, EvaluadorRequiredMixin, RevisorRequiredMixin, DirectorRequiredMixin 
+from expedientes.models import Solicitud, Certificado
 from .forms import AlcanceRevisionFormSet, EvaluadorForm, EvidenciaForm, EvidenciaRevisionFormSet # <-- Importamos nuestro FormSet
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -10,6 +10,12 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from expedientes.models import Evaluador, Actividad, Evidencia
 from .forms import ActividadFormSet # <-- Importa el nuevo FormSet
+from django.views.generic import DetailView
+from weasyprint import HTML
+from datetime import date, timedelta
+from django.template.loader import get_template
+from django.http import HttpResponse
+
 
 
         # Vista del panel de staff
@@ -20,10 +26,14 @@ class StaffDashboardView(StaffRequiredMixin, View):
         # NUEVA QUERY
         solicitudes_en_ejecucion = Solicitud.objects.filter(estado='En Ejecución')
 
+        # NUEVA QUERY
+        solicitudes_para_decision = Solicitud.objects.filter(estado='Revisión de Evidencias')
+
         context = {
             # ... (contexto existente) ...
             'solicitudes_por_planificar': solicitudes_por_planificar,
             'solicitudes_en_ejecucion': solicitudes_en_ejecucion, # NUEVO
+            'solicitudes_para_decision': solicitudes_para_decision, 
         }
         return render(request, 'staff_panel/staff_dashboard.html', context)
 
@@ -270,3 +280,69 @@ def post(self, request, *args, **kwargs):
 
         context = {'solicitud': solicitud, 'formset': formset}
         return render(request, self.template_name, context)
+
+class ExpedienteDecisionView(DirectorRequiredMixin, DetailView):
+    model = Solicitud
+    template_name = 'staff_panel/expediente_decision.html'
+    context_object_name = 'solicitud'
+
+    def get_queryset(self):
+        # El Director puede ver cualquier solicitud en este estado.
+        return Solicitud.objects.filter(estado='Revisión de Evidencias')
+    
+
+class ExpedienteAprobarView(DirectorRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        solicitud = get_object_or_404(Solicitud, pk=kwargs['pk'], estado='Revisión de Evidencias')
+        
+        # Cambiamos el estado final
+        solicitud.estado = 'Aprobado'
+        solicitud.save()
+        
+        # Futuro: Aquí iría la lógica para bloquear la edición de todos los objetos relacionados.
+        
+        messages.success(request, f'El expediente {solicitud} ha sido APROBADO con éxito. Ya puede proceder a emitir el certificado.')
+        return redirect('staff_dashboard')
+    
+class GenerarCertificadoPDFView(DirectorRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        solicitud = get_object_or_404(Solicitud, pk=kwargs['pk'], estado='Aprobado')
+        
+        # 1. Generar datos del certificado
+        # Podrías crear una lógica más compleja para el código si quieres.
+        codigo_certificado = f"AOX-CERT-{solicitud.id:04d}-{date.today().year}"
+        fecha_emision = date.today()
+        # Asumimos que los certificados duran 3 años.
+        fecha_vencimiento = fecha_emision + timedelta(days=3*365)
+
+        # 2. Preparar el contexto para la plantilla
+        context = {
+            'solicitud': solicitud,
+            'codigo_certificado': codigo_certificado,
+            'fecha_emision': fecha_emision,
+            'fecha_vencimiento': fecha_vencimiento,
+        }
+
+        # 3. Renderizar la plantilla HTML
+        template = get_template('staff_panel/certificado_template.html')
+        html_string = template.render(context)
+
+        # 4. Generar el PDF con WeasyPrint
+        html = HTML(string=html_string, base_url=request.build_absolute_uri())
+        pdf = html.write_pdf()
+
+        # 5. Guardar registro en la base de datos (opcional pero recomendado)
+        # Primero, borramos cualquier certificado antiguo para esta solicitud
+        Certificado.objects.filter(solicitud=solicitud).delete()
+        nuevo_certificado = Certificado.objects.create(
+            solicitud=solicitud,
+            codigo_certificado=codigo_certificado,
+            fecha_vencimiento=fecha_vencimiento
+        )
+        # Aquí guardaríamos el archivo físico, pero para este ejemplo, lo servimos directamente.
+        # En un caso real, guardarías `pdf` en `nuevo_certificado.archivo_pdf`.
+
+        # 6. Devolver el PDF como una respuesta HTTP para descargar
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="certificado_{solicitud.empresa.nit}.pdf"'
+        return response

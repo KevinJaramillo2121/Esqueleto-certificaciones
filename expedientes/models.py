@@ -168,3 +168,13 @@ class Evidencia(models.Model):
 
     def __str__(self):
         return f"Evidencia para actividad {self.actividad.id}: {self.descripcion}"
+    
+class Certificado(models.Model):
+    solicitud = models.OneToOneField(Solicitud, on_delete=models.CASCADE, related_name='certificado')
+    codigo_certificado = models.CharField(max_length=50, unique=True)
+    fecha_emision = models.DateField(auto_now_add=True)
+    fecha_vencimiento = models.DateField()
+    archivo_pdf = models.FileField(upload_to='certificados/', blank=True, null=True)
+
+    def __str__(self):
+        return f"Certificado {self.codigo_certificado} para {self.solicitud.empresa.razon_social}"

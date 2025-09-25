@@ -1,0 +1,58 @@
+<!-- templates/staff_panel/expediente_decision.html -->
+<h1>Decisión Final del Expediente: {{ solicitud }}</h1>
+<a href="{% url 'staff_dashboard' %}"><< Volver al Panel</a>
+<hr>
+
+<div style="display: flex; gap: 20px;">
+    <div style="flex: 1;">
+        <h2>Información General</h2>
+        <p><strong>Cliente:</strong> {{ solicitud.empresa.razon_social }}</p>
+        <p><strong>NIT:</strong> {{ solicitud.empresa.nit }}</p>
+        <p><strong>Representante Legal:</strong> {{ solicitud.empresa.representantelegal }}</p>
+    </div>
+    <div style="flex: 1;">
+        <h2>Estado del Proceso</h2>
+        <p><strong>Estado Actual:</strong> {{ solicitud.estado }}</p>
+        <p><strong>Fecha de Solicitud:</strong> {{ solicitud.fecha_creacion|date:"d F, Y" }}</p>
+    </div>
+</div>
+<hr>
+
+<h2>Alcances Aprobados</h2>
+{% for alcance in solicitud.alcances.all %}
+    <details>
+        <summary><strong>{{ alcance.tipo }}:</strong> {{ alcance.descripcion|truncatechars:80 }}</summary>
+        <ul>
+            <li><strong>Referencia Normativa:</strong> {{ alcance.referencia_normativa }}</li>
+            <li><strong>Recursos Asociados:</strong> {{ alcance.personas_clave.count }} personas, {{ alcance.equipos_clave.count }} equipos, {{ alcance.documentos_proceso.count }} documentos.</li>
+        </ul>
+    </details>
+{% endfor %}
+<hr>
+
+<h2>Actividades y Evidencias de Evaluación</h2>
+{% for actividad in solicitud.actividades.all %}
+    <details>
+        <summary><strong>Actividad:</strong> {{ actividad.nombre }} (Asignada a {{ actividad.evaluador_asignado }})</summary>
+        <ul>
+            {% for evidencia in actividad.evidencias.all %}
+                <li>
+                    <a href="{{ evidencia.archivo.url }}" target="_blank">{{ evidencia.descripcion|default:"Evidencia" }}</a> - 
+                    <span style="color:green;">Revisión Conforme</span>
+                </li>
+            {% empty %}
+                <li>No hay evidencias para esta actividad.</li>
+            {% endfor %}
+        </ul>
+    </details>
+{% endfor %}
+<hr>
+
+<h2>Decisión Final</h2>
+<p>Revise toda la información. Al aprobar, el expediente se bloqueará y estará listo para la emisión del certificado.</p>
+<form method="post" action="{% url 'expediente_aprobar' solicitud.pk %}">
+    {% csrf_token %}
+    <button type="submit" style="background-color: #27ae60; color: white;" onclick="return confirm('¿Está seguro de que desea APROBAR este expediente? Esta acción es irreversible.')">
+        Aprobar Expediente y Proceder a Emisión
+    </button>
+</form>

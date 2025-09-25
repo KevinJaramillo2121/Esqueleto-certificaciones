@@ -1,0 +1,52 @@
+<!-- templates/staff_panel/certificado_template.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Certificado de Conformidad</title>
+    <style>
+        @page { size: A4; margin: 2.5cm; }
+        body { font-family: 'Helvetica', sans-serif; color: #333; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { color: #484547; font-size: 24pt; margin: 0; }
+        .header p { color: #F37728; font-size: 14pt; margin: 5px 0; }
+        .content { font-size: 12pt; line-height: 1.6; }
+        .content .company { font-weight: bold; font-size: 16pt; }
+        .footer { position: fixed; bottom: -1.5cm; left: 0; right: 0; text-align: center; font-size: 9pt; color: #888; }
+        .signature { margin-top: 80px; text-align: right; }
+        .signature-line { border-top: 1px solid #333; width: 250px; margin: 0 0 5px auto; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <!-- Asume que tienes el logo en 'static/images/logo.png' -->
+        <!-- <img src="{% static 'images/logo.png' %}" alt="AOXLAB Logo" style="max-height: 80px;"> -->
+        <h1>Certificado de Conformidad</h1>
+        <p>Otorgado por AOXLAB S.A.S.</p>
+    </div>
+
+    <div class="content">
+        <p>AOXLAB S.A.S. certifica que la empresa:</p>
+        <p class="company">{{ solicitud.empresa.razon_social }}</p>
+        <p>Con NIT <strong>{{ solicitud.empresa.nit }}</strong>, ha demostrado conformidad para el siguiente alcance:</p>
+        
+        <ul>
+        {% for alcance in solicitud.alcances.all %}
+            <li><strong>{{ alcance.tipo }}:</strong> {{ alcance.descripcion }} (Norma de Referencia: {{ alcance.referencia_normativa }})</li>
+        {% endfor %}
+        </ul>
+
+        <p>Este certificado es válido desde el <strong>{{ fecha_emision|date:"d \d\e F \d\e Y" }}</strong> hasta el <strong>{{ fecha_vencimiento|date:"d \d\e F \d\e Y" }}</strong>.</p>
+        <p>Código del Certificado: <strong>{{ codigo_certificado }}</strong></p>
+    </div>
+
+    <div class="signature">
+        <div class="signature-line"></div>
+        <p>Director de Certificaciones<br>AOXLAB S.A.S.</p>
+    </div>
+
+    <div class="footer">
+        AOXLAB S.A.S. | Dirección, Ciudad | Teléfono | www.aoxlab.com
+    </div>
+</body>
+</html>

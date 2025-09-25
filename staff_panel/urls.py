@@ -1,9 +1,9 @@
 # staff_panel/urls.py
 from django.urls import path
 from .views import (
-    StaffDashboardView, SolicitudRevisionView,
+    StaffDashboardView, SolicitudRevisionView, 
     EvaluadorListView, EvaluadorCreateView, EvaluadorUpdateView, EvaluadorDeleteView, SolicitudPlanificacionView, IniciarEjecucionView,
-    EvaluadorDashboardView, ActividadDetailView, SolicitudEvidenciaRevisionView
+    EvaluadorDashboardView, ActividadDetailView, SolicitudEvidenciaRevisionView, ExpedienteDecisionView, ExpedienteAprobarView, GenerarCertificadoPDFView
 )
 
 urlpatterns = [
@@ -31,5 +31,15 @@ urlpatterns = [
 
         # Nueva ruta para que el evaluador revise las evidencias de una solicitud
     path('staff/solicitud/<int:pk>/revisar-evidencias/', SolicitudEvidenciaRevisionView.as_view(), name='solicitud_evidencia_revision'),
+
+        # Nuevas rutas para la decisión y aprobación del expediente
+    path('staff/expediente/<int:pk>/decision/', ExpedienteDecisionView.as_view(), name='expediente_decision'),
+
+        # Nueva ruta para que el Director apruebe el expediente
+    path('staff/expediente/<int:pk>/aprobar/', ExpedienteAprobarView.as_view(), name='expediente_aprobar'),
+
+        # Nueva ruta para generar el certificado en PDF
+    path('staff/expediente/<int:pk>/generar-certificado/', GenerarCertificadoPDFView.as_view(), name='generar_certificado'),
+
 
 ]
