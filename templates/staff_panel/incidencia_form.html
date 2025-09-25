@@ -1,0 +1,12 @@
+{% if object %}
+    <h1>Editar Incidencia</h1>
+{% else %}
+    <h1>Registrar Nueva Incidencia para {{ solicitud.empresa.razon_social }}</h1>
+{% endif %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Guardar Incidencia</button>
+</form>
+<br>
+<a href="{% url 'incidencia_list' %}">Cancelar</a>

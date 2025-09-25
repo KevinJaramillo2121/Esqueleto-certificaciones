@@ -1,0 +1,26 @@
+<h1>Historial de Auditoría para: {{ solicitud }}</h1>
+<a href="{% url 'staff_dashboard' %}"><< Volver al Panel</a>
+<hr>
+
+<table border="1" style="width:100%;">
+    <thead>
+        <tr>
+            <th>Fecha y Hora</th>
+            <th>Usuario</th>
+            <th>Acción Realizada</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for registro in historial %}
+        <tr>
+            <td>{{ registro.fecha_hora|date:"d M, Y - H:i:s" }}</td>
+            <td>{{ registro.usuario.email|default:"Sistema" }}</td>
+            <td>{{ registro.accion }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="3">No hay registros de auditoría para este expediente.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

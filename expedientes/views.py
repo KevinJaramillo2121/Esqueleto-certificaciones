@@ -2,13 +2,16 @@
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Empresa, Sede, RepresentanteLegal, Solicitud, Alcance, PersonaClave, EquipoClave, DocumentoProceso
+
+from users.mixins import StaffRequiredMixin
+from .models import Auditoria, Empresa, Sede, RepresentanteLegal, Solicitud, Alcance, PersonaClave, EquipoClave, DocumentoProceso
 from .forms import EmpresaForm, SedeForm, RepresentanteLegalForm, SolicitudForm, AlcanceForm, PersonaClaveForm, EquipoClaveForm, DocumentoProcesoForm
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView, DeleteView, DetailView
 from django.contrib import messages 
 from django.shortcuts import get_object_or_404 # <-- Importa esta función
-
+from .utils import registrar_auditoria 
+from django.contrib.contenttypes.models import ContentType
 
 # Usamos LoginRequiredMixin para proteger esta vista.
 # Si un usuario no autenticado intenta acceder, será redirigido al login.
@@ -384,5 +387,23 @@ class EnviarSolicitudView(LoginRequiredMixin, View):
         solicitud.estado = 'En Revisión'
         solicitud.save()
 
+        registrar_auditoria(request.user, solicitud, "Solicitud enviada a revisión.")
+
+
         messages.success(request, '¡Solicitud enviada a revisión con éxito!')
         return redirect('solicitud_detalle', pk=solicitud.pk)
+
+class ExpedienteHistorialView(StaffRequiredMixin, DetailView):
+    
+    model = Solicitud
+    template_name = 'staff_panel/expediente_historial.html'
+    context_object_name = 'solicitud'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        solicitud_type = ContentType.objects.get_for_model(self.object)
+        context['historial'] = Auditoria.objects.filter(
+            content_type=solicitud_type,
+            object_id=self.object.pk
+        )
+        return context

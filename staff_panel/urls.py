@@ -1,9 +1,10 @@
 # staff_panel/urls.py
 from django.urls import path
 from .views import (
-    StaffDashboardView, SolicitudRevisionView, 
+    StaffDashboardView, SolicitudRevisionView,
     EvaluadorListView, EvaluadorCreateView, EvaluadorUpdateView, EvaluadorDeleteView, SolicitudPlanificacionView, IniciarEjecucionView,
-    EvaluadorDashboardView, ActividadDetailView, SolicitudEvidenciaRevisionView, ExpedienteDecisionView, ExpedienteAprobarView, GenerarCertificadoPDFView
+    EvaluadorDashboardView, ActividadDetailView, SolicitudEvidenciaRevisionView, ExpedienteDecisionView, ExpedienteAprobarView, GenerarCertificadoPDFView,
+    ExpedienteHistorialView, IncidenciaListView, IncidenciaCreateView, IncidenciaUpdateView
 )
 
 urlpatterns = [
@@ -41,5 +42,11 @@ urlpatterns = [
         # Nueva ruta para generar el certificado en PDF
     path('staff/expediente/<int:pk>/generar-certificado/', GenerarCertificadoPDFView.as_view(), name='generar_certificado'),
 
+    path('staff/solicitud/<int:pk>/historial/', ExpedienteHistorialView.as_view(), name='expediente_historial'),
+
+        # Rutas para la gestión de incidencias
+    path('staff/incidencias/', IncidenciaListView.as_view(), name='incidencia_list'),
+    path('staff/solicitud/<int:solicitud_pk>/incidencia/crear/', IncidenciaCreateView.as_view(), name='incidencia_crear'),
+    path('staff/incidencia/<int:pk>/editar/', IncidenciaUpdateView.as_view(), name='incidencia_editar'), 
 
 ]

@@ -1,0 +1,19 @@
+<h1>Gestión de Incidencias (Quejas y Sanciones)</h1>
+<a href="{% url 'staff_dashboard' %}"><< Volver al Panel</a>
+<hr>
+<table border="1" style="width:100%;">
+    <thead><tr><th>Fecha</th><th>Tipo</th><th>Empresa</th><th>Estado</th><th>Acciones</th></tr></thead>
+    <tbody>
+        {% for incidencia in incidencias %}
+        <tr>
+            <td>{{ incidencia.fecha_reporte|date:"d M, Y" }}</td>
+            <td>{{ incidencia.get_tipo_display }}</td>
+            <td>{{ incidencia.solicitud.empresa.razon_social }}</td>
+            <td>{{ incidencia.get_estado_display }}</td>
+            <td><a href="{% url 'incidencia_editar' incidencia.pk %}">Ver / Editar</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="text-align:center; padding: 10px;">No hay incidencias registradas.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>

@@ -3,6 +3,18 @@
 <p>Bienvenido, {{ user.nombre }}.</p>
 <hr>
 
+<!-- Menú de Administración Principal -->
+<section>
+    <h2>Administración</h2>
+    <a href="{% url 'evaluador_list' %}">Gestionar Base de Datos de Evaluadores</a>
+    <a href="{% url 'incidencia_list' %}">Gestionar Quejas y Sanciones</a>
+    <!-- Más enlaces administrativos pueden ir aquí -->
+</section>
+
+<hr>
+
+<!-- Sección de Tareas por Estado -->
+
 <section>
     <h2>Solicitudes Pendientes de Revisión</h2>
     {% if solicitudes_por_revisar %}
@@ -11,7 +23,6 @@
                 <tr>
                     <th style="padding: 8px;">ID Solicitud</th>
                     <th style="padding: 8px;">Empresa</th>
-                    <th style="padding: 8px;">Fecha de Envío</th>
                     <th style="padding: 8px;">Acciones</th>
                 </tr>
             </thead>
@@ -20,22 +31,14 @@
                 <tr>
                     <td style="padding: 8px;">{{ solicitud }}</td>
                     <td style="padding: 8px;">{{ solicitud.empresa.razon_social }}</td>
-                    <td style="padding: 8px;">{{ solicitud.fecha_creacion|date:"d/m/Y" }}</td>
                     <td style="padding: 8px;">
-                        <a href="{% url 'solicitud_revision' solicitud.pk %}">Revisar Solicitud</a>
+                        <a href="{% url 'solicitud_revision' solicitud.pk %}">Revisar Solicitud</a> |
+                        <a href="{% url 'expediente_historial' solicitud.pk %}" style="font-size: 0.9em; color: #555;">Ver Historial</a>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-
-        
-        <hr>
-        <section>
-            <h2>Administración</h2>
-            <a href="{% url 'evaluador_list' %}">Gestionar Base de Datos de Evaluadores</a>
-        </section>
-
     {% else %}
         <p>No hay solicitudes pendientes de revisión en este momento.</p>
     {% endif %}
@@ -43,77 +46,69 @@
 
 <hr>
 
-<!-- NUEVA SECCIÓN -->
 <section>
     <h2>Solicitudes Pendientes de Planificación</h2>
     {% if solicitudes_por_planificar %}
         <table border="1" style="width:100%; border-collapse: collapse;">
-            <thead>
-                <tr>
-                    <th style="padding: 8px;">ID Solicitud</th>
-                    <th style="padding: 8px;">Empresa</th>
-                    <th style="padding: 8px;">Acciones</th>
-                </tr>
-            </thead>
+            <!-- ... (thead similar a la tabla anterior) ... -->
             <tbody>
                 {% for solicitud in solicitudes_por_planificar %}
                 <tr>
                     <td style="padding: 8px;">{{ solicitud }}</td>
                     <td style="padding: 8px;">{{ solicitud.empresa.razon_social }}</td>
                     <td style="padding: 8px;">
-                        <a href="{% url 'solicitud_planificar' solicitud.pk %}">Planificar Evaluación</a>
+                        <a href="{% url 'solicitud_planificar' solicitud.pk %}">Planificar Evaluación</a> |
+                        <a href="{% url 'expediente_historial' solicitud.pk %}" style="font-size: 0.9em; color: #555;">Ver Historial</a>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <p>No hay solicitudes pendientes de planificación en este momento.</p>
+        <p>No hay solicitudes pendientes de planificación.</p>
     {% endif %}
 </section>
 
 <hr>
+
 <section>
     <h2>Solicitudes en Ejecución (Pendientes de Revisión de Evidencias)</h2>
     {% if solicitudes_en_ejecucion %}
-        <table border="1">
-            <!-- ... (similar a las otras tablas) ... -->
+        <table border="1" style="width:100%; border-collapse: collapse;">
+            <!-- ... (thead similar) ... -->
             <tbody>
                 {% for solicitud in solicitudes_en_ejecucion %}
                 <tr>
-                    <td>{{ solicitud }}</td>
-                    <td>{{ solicitud.empresa.razon_social }}</td>
-                    <td>
-                        <a href="{% url 'solicitud_evidencia_revision' solicitud.pk %}">Revisar Evidencias</a>
+                    <td style="padding: 8px;">{{ solicitud }}</td>
+                    <td style="padding: 8px;">{{ solicitud.empresa.razon_social }}</td>
+                    <td style="padding: 8px;">
+                        <a href="{% url 'solicitud_evidencia_revision' solicitud.pk %}">Revisar Evidencias</a> |
+                        <a href="{% url 'expediente_historial' solicitud.pk %}" style="font-size: 0.9em; color: #555;">Ver Historial</a>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <p>No hay solicitudes en ejecución en este momento.</p>
+        <p>No hay solicitudes en ejecución.</p>
     {% endif %}
 </section>
 
 <hr>
+
 <section>
     <h2>Expedientes Pendientes de Decisión Final</h2>
     {% if solicitudes_para_decision %}
         <table border="1" style="width:100%; border-collapse: collapse;">
-            <thead>
-                <tr>
-                    <th>ID Solicitud</th>
-                    <th>Empresa</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
+            <!-- ... (thead similar) ... -->
             <tbody>
                 {% for solicitud in solicitudes_para_decision %}
                 <tr>
-                    <td>{{ solicitud }}</td>
-                    <td>{{ solicitud.empresa.razon_social }}</td>
-                    <td>
-                        <a href="{% url 'expediente_decision' solicitud.pk %}">Revisar y Decidir</a>
+                    <td style="padding: 8px;">{{ solicitud }}</td>
+                    <td style="padding: 8px;">{{ solicitud.empresa.razon_social }}</td>
+                    <td style="padding: 8px;">
+                        <a href="{% url 'expediente_decision' solicitud.pk %}">Revisar y Decidir</a> |
+                        <a href="{% url 'expediente_historial' solicitud.pk %}" style="font-size: 0.9em; color: #555;">Ver Historial</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -125,24 +120,35 @@
 </section>
 
 <hr>
+
 <section>
     <h2>Expedientes Aprobados</h2>
-    <table border="1" style="width:100%; border-collapse: collapse;">
-        <!-- ... (thead) ... -->
-        <tbody>
-            {% for solicitud in solicitudes.all %}
-                {% if solicitud.estado == 'Aprobado' %}
+    {% if solicitudes_aprobadas %}
+        <table border="1" style="width:100%; border-collapse: collapse;">
+            <thead>
                 <tr>
-                    <td>{{ solicitud }}</td>
-                    <td>{{ solicitud.empresa.razon_social }}</td>
-                    <td>
-                        <a href="{% url 'generar_certificado' solicitud.pk %}" style="color:green;">Generar y Descargar Certificado</a>
+                    <th style="padding: 8px;">ID Solicitud</th>
+                    <th style="padding: 8px;">Empresa</th>
+                    <th style="padding: 8px;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for solicitud in solicitudes_aprobadas %}
+                <tr>
+                    <td style="padding: 8px;">{{ solicitud }}</td>
+                    <td style="padding: 8px;">{{ solicitud.empresa.razon_social }}</td>
+                    <td style="padding: 8px;">
+                        <a href="{% url 'generar_certificado' solicitud.pk %}" style="color:green;">Generar Certificado</a> |
+                        <a href="{% url 'expediente_historial' solicitud.pk %}" style="font-size: 0.9em; color: #555;">Ver Historial</a>
+                        <a href="{% url 'incidencia_crear' solicitud.pk %}">Registrar Incidencia</a>
                     </td>
                 </tr>
-                {% endif %}
-            {% endfor %}
-        </tbody>
-    </table>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Aún no hay expedientes aprobados.</p>
+    {% endif %}
 </section>
 
 <hr>

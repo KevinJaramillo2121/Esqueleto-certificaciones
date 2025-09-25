@@ -4,6 +4,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from django.conf import settings 
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 # Modelo Empresa
 class Empresa(models.Model):
@@ -178,3 +179,46 @@ class Certificado(models.Model):
 
     def __str__(self):
         return f"Certificado {self.codigo_certificado} para {self.solicitud.empresa.razon_social}"
+    
+class Auditoria(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='acciones_auditoria')
+    accion = models.CharField(max_length=255, help_text="Descripción de la acción realizada.")
+    fecha_hora = models.DateTimeField(auto_now_add=True)
+    # Usaremos GenericForeignKey para vincular este log a cualquier otro modelo (Solicitud, Actividad, etc.)
+    content_type = models.ForeignKey('contenttypes.ContentType', on_delete=models.CASCADE, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    objeto_relacionado = GenericForeignKey('content_type', 'object_id')
+
+    def __str__(self):
+        return f"[{self.fecha_hora.strftime('%Y-%m-%d %H:%M')}] {self.usuario}: {self.accion}"
+
+    class Meta:
+        ordering = ['-fecha_hora']
+
+class Incidencia(models.Model):
+    TIPO_INCIDENCIA_CHOICES = [
+        ('Queja de Tercero', 'Queja de Tercero'),
+        ('Apelación del Cliente', 'Apelación del Cliente'),
+        ('Amonestación', 'Amonestación'),
+        ('Sanción', 'Sanción'),
+        ('Vigilancia', 'Vigilancia'),
+    ]
+    
+    ESTADO_INCIDENCIA_CHOICES = [
+        ('Abierta', 'Abierta'),
+        ('En Investigación', 'En Investigación'),
+        ('Cerrada', 'Cerrada'),
+    ]
+
+    solicitud = models.ForeignKey(Solicitud, on_delete=models.CASCADE, related_name='incidencias')
+    tipo = models.CharField(max_length=50, choices=TIPO_INCIDENCIA_CHOICES)
+    descripcion = models.TextField()
+    fecha_reporte = models.DateField(auto_now_add=True)
+    estado = models.CharField(max_length=50, choices=ESTADO_INCIDENCIA_CHOICES, default='Abierta')
+    # El usuario del staff que registra la incidencia
+    registrado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='incidencias_registradas')
+    # Podemos adjuntar un archivo de evidencia para la incidencia
+    archivo_adjunto = models.FileField(upload_to='incidencias/', blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.get_tipo_display()} para {self.solicitud.empresa.razon_social} ({self.fecha_reporte})"

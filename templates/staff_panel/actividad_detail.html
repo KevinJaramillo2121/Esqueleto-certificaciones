@@ -10,8 +10,8 @@
     <p><strong>Empresa:</strong> {{ actividad.solicitud.empresa.razon_social }}</p>
     <p><strong>Fecha Límite para Carga de Evidencias:</strong> <span style="color: #c0392b;">{{ actividad.fecha_limite_evidencias|date:"d F, Y" }}</span></p>
     {% if actividad.estado == 'Con Inconsistencias' %}
-        <div style="background-color: #e74c3c; color: white; padding: 15px; border-radius: 5px; margin: 15px 0;">
-            <strong>¡Atención!</strong> Esta actividad fue devuelta con observaciones. Por favor, revisa los comentarios en las evidencias, sube los archivos corregidos y la tarea se reenviará automáticamente a revisión.
+        <div style="background-color: #ffe6e6; border: 1px solid #c0392b; color: #333; padding: 15px; border-radius: 5px; margin: 15px 0;">
+            <strong>¡Atención!</strong> Esta actividad fue devuelta con observaciones. Por favor, revisa los comentarios en las evidencias a continuación, sube los archivos corregidos y la tarea se reenviará automáticamente a revisión.
         </div>
     {% endif %}
 </section>
@@ -49,11 +49,11 @@
                         <td style="padding: 8px;">{{ evidencia.fecha_carga|date:"d M, Y H:i" }}</td>
                         <td style="padding: 8px;">
                             {% if evidencia.revision_conforme is True %}
-                                <span style="color: #27ae60;">Conforme</span>
+                                <span style="color: #27ae60; font-weight: bold;">Conforme</span>
                             {% elif evidencia.revision_conforme is False %}
                                 <strong style="color: #c0392b;">No Conforme</strong>
                                 {% if evidencia.revision_observaciones %}
-                                    <p style="color:#c0392b; font-size: 0.9em; margin: 5px 0 0 0;">
+                                    <p style="color:#c0392b; font-size: 0.9em; margin: 5px 0 0 0; border-left: 2px solid #e74c3c; padding-left: 8px;">
                                         <em>{{ evidencia.revision_observaciones }}</em>
                                     </p>
                                 {% endif %}

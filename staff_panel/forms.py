@@ -1,6 +1,6 @@
 # staff_panel/forms.py
 from django import forms
-from expedientes.models import Solicitud, Alcance, Evaluador, Actividad, Evidencia
+from expedientes.models import Solicitud, Alcance, Evaluador, Actividad, Evidencia, Incidencia
 
 
 # Este es el formulario para cada fila (cada alcance)
@@ -71,3 +71,8 @@ EvidenciaRevisionFormSet = forms.modelformset_factory(
     form=EvidenciaRevisionForm,
     extra=0  # No mostrar formularios vacíos extra
 )
+
+class IncidenciaForm(forms.ModelForm):
+    class Meta:
+        model = Incidencia
+        fields = ['tipo', 'descripcion', 'estado', 'archivo_adjunto']

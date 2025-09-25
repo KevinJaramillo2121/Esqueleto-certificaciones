@@ -1,9 +1,9 @@
 # staff_panel/views.py
 from django.shortcuts import render
 from django.views import View
-from users.mixins import StaffRequiredMixin, EvaluadorRequiredMixin, RevisorRequiredMixin, DirectorRequiredMixin 
-from expedientes.models import Solicitud, Certificado
-from .forms import AlcanceRevisionFormSet, EvaluadorForm, EvidenciaForm, EvidenciaRevisionFormSet # <-- Importamos nuestro FormSet
+from users.mixins import StaffRequiredMixin, EvaluadorRequiredMixin, RevisorRequiredMixin, DirectorRequiredMixin
+from expedientes.models import Solicitud, Certificado, Incidencia
+from .forms import AlcanceRevisionFormSet, EvaluadorForm, EvidenciaForm, EvidenciaRevisionFormSet, IncidenciaForm # <-- Importamos nuestro FormSet
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse_lazy
@@ -11,10 +11,13 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from expedientes.models import Evaluador, Actividad, Evidencia
 from .forms import ActividadFormSet # <-- Importa el nuevo FormSet
 from django.views.generic import DetailView
-from weasyprint import HTML
 from datetime import date, timedelta
 from django.template.loader import get_template
 from django.http import HttpResponse
+from expedientes.utils import registrar_auditoria # <-- Importa la función
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.contenttypes.models import ContentType
+from expedientes.models import Auditoria
 
 
 
@@ -28,6 +31,10 @@ class StaffDashboardView(StaffRequiredMixin, View):
 
         # NUEVA QUERY
         solicitudes_para_decision = Solicitud.objects.filter(estado='Revisión de Evidencias')
+
+        # Ejemplo: Obtener todas las solicitudes aprobadas
+        solicitudes_aprobadas = Solicitud.objects.filter(estado='Aprobado')
+        context['solicitudes_aprobadas'] = solicitudes_aprobadas
 
         context = {
             # ... (contexto existente) ...
@@ -63,6 +70,11 @@ class SolicitudRevisionView(StaffRequiredMixin, View):
             todos_conformes = all(alcance.revision_conforme for alcance in solicitud.alcances.all() if alcance.revision_conforme is not None)
             hay_no_conformes = any(alcance.revision_conforme is False for alcance in solicitud.alcances.all())
 
+            if solicitud.estado == 'En Planificación':
+                registrar_auditoria(request.user, solicitud, "Revisión de solicitud completada. Todos los ítems conformes.")
+            else:
+                registrar_auditoria(request.user, solicitud, "Revisión de solicitud completada. Se encontraron no conformidades.")
+
             if hay_no_conformes:
                 solicitud.estado = 'En Subsanación'
                 messages.warning(request, 'La solicitud ha sido devuelta al cliente con observaciones.')
@@ -72,6 +84,8 @@ class SolicitudRevisionView(StaffRequiredMixin, View):
             
             solicitud.save()
             return redirect('staff_dashboard')
+
+            
         
         context = {
             'solicitud': solicitud,
@@ -149,8 +163,10 @@ class IniciarEjecucionView(StaffRequiredMixin, View):
         # ¡Acción principal! Cambiamos el estado
         solicitud.estado = 'En Ejecución'
         solicitud.save()
-
         solicitud.actividades.update(estado='En Ejecución')
+
+        registrar_auditoria(request.user, solicitud, "Planificación confirmada. Se inició la fase de ejecución.")
+
 
         messages.success(request, f'La solicitud {solicitud} ha pasado al estado "En Ejecución". Las tareas ahora serán visibles para los evaluadores asignados.')
         return redirect('staff_dashboard')
@@ -193,42 +209,52 @@ class ActividadDetailView(EvaluadorRequiredMixin, View):
         }
         return render(request, self.template_name, context)
 
-    def post(self, request, *args, **kwargs):
-        actividad = get_object_or_404(
-            Actividad, 
-            pk=kwargs['pk'], 
-            evaluador_asignado=request.user.perfil_evaluador
-        )
-        
-        form = EvidenciaForm(request.POST, request.FILES)
-        
-        if form.is_valid():
-            nueva_evidencia = form.save(commit=False)
-            nueva_evidencia.actividad = actividad
-            nueva_evidencia.save()
-            messages.success(request, 'Evidencia subida correctamente.')
+def post(self, request, *args, **kwargs):
+    actividad = get_object_or_404(
+        Actividad, 
+        pk=kwargs['pk'], 
+        evaluador_asignado=request.user.perfil_evaluador
+    )
+    
+    form = EvidenciaForm(request.POST, request.FILES)
+    
+    if form.is_valid():
+        nueva_evidencia = form.save(commit=False)
+        nueva_evidencia.actividad = actividad
+        nueva_evidencia.save()
+        messages.success(request, 'Evidencia subida correctamente.')
 
-            # --- LÓGICA CONDICIONAL CORRECTA ---
-            # Solo si la actividad fue devuelta, la marcamos como corregida.
-            if actividad.estado == 'Con Inconsistencias':
-                # Limpiamos las marcas de revisión de TODAS las evidencias de esta actividad
-                actividad.evidencias.update(revision_conforme=None, revision_observaciones='')
-                # Devolvemos la actividad a su estado de trabajo normal
-                actividad.estado = 'En Ejecución'
-                actividad.save()
-                messages.info(request, 'La actividad ha sido marcada como corregida y enviada nuevamente a revisión.')
-            
-            return redirect('actividad_detail', pk=actividad.pk)
+        # --- LÓGICA CONDICIONAL CORRECTA ---
+        # Solo si la actividad fue devuelta, la marcamos como corregida.
+        if actividad.estado == 'Con Inconsistencias':
+            # Limpiamos las marcas de revisión de TODAS las evidencias de esta actividad
+            actividad.evidencias.update(revision_conforme=None, revision_observaciones='')
+            # Devolvemos la actividad a su estado de trabajo normal
+            actividad.estado = 'En Ejecución'
+            actividad.save()
+            messages.info(request, 'La actividad ha sido marcada como corregida y enviada nuevamente a revisión.')
+        
+        return redirect('actividad_detail', pk=actividad.pk)
 
-        # Si el formulario no es válido, se mantiene el flujo de error.
-        evidencias = actividad.evidencias.all().order_by('-fecha_carga')
-        context = {
-            'actividad': actividad,
-            'evidencias': evidencias,
-            'form': form
-        }
-        messages.error(request, 'Hubo un error al subir el archivo. Por favor, inténtalo de nuevo.')
-        return render(request, self.template_name, context)
+    # Si el formulario no es válido, se mantiene el flujo de error.
+    evidencias = actividad.evidencias.all().order_by('-fecha_carga')
+    context = {
+        'actividad': actividad,
+        'evidencias': evidencias,
+        'form': form
+    }
+    messages.error(request, 'Hubo un error al subir el archivo. Por favor, inténtalo de nuevo.')
+    return render(request, self.template_name, context)
+
+
+    evidencias = actividad.evidencias.all().order_by('-fecha_carga')
+    context = {
+    'actividad': actividad,
+    'evidencias': evidencias,
+    'form': form
+    }
+    messages.error(request, 'Hubo un error al subir el archivo. Por favor, inténtalo de nuevo.')
+    return render(request, self.template_name, context)
 
 class SolicitudEvidenciaRevisionView(RevisorRequiredMixin, View):
     template_name = 'staff_panel/solicitud_evidencia_revision.html'
@@ -299,13 +325,16 @@ class ExpedienteAprobarView(DirectorRequiredMixin, View):
         solicitud.estado = 'Aprobado'
         solicitud.save()
         
-        # Futuro: Aquí iría la lógica para bloquear la edición de todos los objetos relacionados.
+        registrar_auditoria(request.user, solicitud, "Expediente APROBADO. Decisión final tomada.")
         
         messages.success(request, f'El expediente {solicitud} ha sido APROBADO con éxito. Ya puede proceder a emitir el certificado.')
         return redirect('staff_dashboard')
     
 class GenerarCertificadoPDFView(DirectorRequiredMixin, View):
     def get(self, request, *args, **kwargs):
+
+        from weasyprint import HTML
+
         solicitud = get_object_or_404(Solicitud, pk=kwargs['pk'], estado='Aprobado')
         
         # 1. Generar datos del certificado
@@ -346,3 +375,56 @@ class GenerarCertificadoPDFView(DirectorRequiredMixin, View):
         response = HttpResponse(pdf, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="certificado_{solicitud.empresa.nit}.pdf"'
         return response
+    
+class ExpedienteHistorialView(StaffRequiredMixin, DetailView):
+    model = Solicitud
+    template_name = 'staff_panel/expediente_historial.html'
+    context_object_name = 'solicitud'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Obtenemos el "tipo de contenido" del modelo Solicitud
+        solicitud_type = ContentType.objects.get_for_model(self.object)
+        # Filtramos el log de auditoría para mostrar solo los registros de esta solicitud específica
+        context['historial'] = Auditoria.objects.filter(
+            content_type=solicitud_type,
+            object_id=self.object.pk
+        )
+        return context
+    
+class IncidenciaListView(DirectorRequiredMixin, ListView):
+    model = Incidencia
+    template_name = 'staff_panel/incidencia_list.html'
+    context_object_name = 'incidencias'
+    ordering = ['-fecha_reporte']
+
+class IncidenciaCreateView(DirectorRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        solicitud = get_object_or_404(Solicitud, pk=kwargs['solicitud_pk'])
+        form = IncidenciaForm()
+        return render(request, 'staff_panel/incidencia_form.html', {'form': form, 'solicitud': solicitud})
+
+    def post(self, request, *args, **kwargs):
+        solicitud = get_object_or_404(Solicitud, pk=kwargs['solicitud_pk'])
+        form = IncidenciaForm(request.POST, request.FILES)
+        if form.is_valid():
+            incidencia = form.save(commit=False)
+            incidencia.solicitud = solicitud
+            incidencia.registrado_por = request.user
+            incidencia.save()
+            registrar_auditoria(request.user, solicitud, f"Se registró una nueva incidencia: '{incidencia.get_tipo_display()}'.")
+            messages.success(request, 'Incidencia registrada correctamente.')
+            return redirect('incidencia_list')
+        return render(request, 'staff_panel/incidencia_form.html', {'form': form, 'solicitud': solicitud})
+
+class IncidenciaUpdateView(DirectorRequiredMixin, UpdateView):
+    model = Incidencia
+    form_class = IncidenciaForm
+    template_name = 'staff_panel/incidencia_form.html'
+    success_url = reverse_lazy('incidencia_list')
+
+    def form_valid(self, form):
+        incidencia = form.save()
+        registrar_auditoria(self.request.user, incidencia.solicitud, f"Se actualizó la incidencia '{incidencia.get_tipo_display()}'. Nuevo estado: {incidencia.estado}.")
+        messages.success(self.request, 'Incidencia actualizada.')
+        return super().form_valid(form)
